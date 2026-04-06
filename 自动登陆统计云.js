@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         统计云自动登陆
 // @namespace    http://tampermonkey.net/
-// @version      4.1
+// @version      4.2
 // @description  自动处理网站登录流程，包括账号管理等
 // @author       hanj1998@foxmail.com
 // @match        *://*/*
@@ -15,6 +15,10 @@
 // @license      MIT
 // ==/UserScript==
 
+// 2026-04-07 v4.2
+//  - 优化了初始化流程，先检查网址是否匹配，再执行后续操作
+//  - 调整了代码结构，将非方法代码提取到初始化函数中
+//  - 提高了脚本执行效率，减少了不必要的操作
 // 2026-04-07 v4.1
 //  - 优化了打印和弹窗文本，统一了日志格式
 //  - 调整了添加账号界面输入框的宽度，使其更加紧凑
@@ -292,15 +296,10 @@
   };
 
   // 当前站点host，用于区分不同网站的存储
-  const host = window.location.host;
-  console.log(`[${scriptName}] 当前站点: ${host}`);
-
-  // 从 Tampermonkey 存储中读取账号数据（按 host 区分）
-  let accounts = GM_getValue("accounts_" + host, []);
-  let defaultAccountIndex = GM_getValue("defaultAccountIndex_" + host, -1);
-  console.log(
-    `[${scriptName}] 加载账号数据: ${accounts.length} 个账号, 默认账号索引: ${defaultAccountIndex}`,
-  );
+  let host;
+  // 账号数据
+  let accounts = [];
+  let defaultAccountIndex = -1;
 
   // 获取默认账号
   function getDefaultAccount() {
@@ -742,34 +741,43 @@
     return false;
   }
 
-  // 初始化
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-      addCustomStyles();
-      registerMenuCommands();
-      // 检查自定义网址列表长度
-      const customUrls = GM_getValue("customUrls", []);
-      if (customUrls.length === 0) {
-        console.log(`[${scriptName}] 自定义网址列表为空，脚本未运行`);
-        return;
-      }
-      if (isUrlAllowed() && window.location.href.includes("login")) {
-        addConfigButton();
-        main();
-      }
-    });
-  } else {
+  // 初始化函数
+  function initializeScript() {
     addCustomStyles();
     registerMenuCommands();
+
     // 检查自定义网址列表长度
     const customUrls = GM_getValue("customUrls", []);
     if (customUrls.length === 0) {
       console.log(`[${scriptName}] 自定义网址列表为空，脚本未运行`);
       return;
     }
-    if (isUrlAllowed() && window.location.href.includes("login")) {
-      addConfigButton();
-      main();
+
+    // 检查当前网址是否在允许列表中且包含login
+    if (!isUrlAllowed() || !window.location.href.includes("login")) {
+      console.log(`[${scriptName}] 网址不匹配或不是登录页面，脚本未运行`);
+      return;
     }
+
+    // 初始化站点信息和账号数据
+    host = window.location.host;
+    console.log(`[${scriptName}] 当前站点: ${host}`);
+
+    // 从 Tampermonkey 存储中读取账号数据（按 host 区分）
+    accounts = GM_getValue("accounts_" + host, []);
+    defaultAccountIndex = GM_getValue("defaultAccountIndex_" + host, -1);
+    console.log(
+      `[${scriptName}] 加载账号数据: ${accounts.length} 个账号, 默认账号索引: ${defaultAccountIndex}`,
+    );
+
+    addConfigButton();
+    main();
+  }
+
+  // 初始化
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeScript);
+  } else {
+    initializeScript();
   }
 })();
