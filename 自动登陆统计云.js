@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         统计云自动登陆
 // @namespace    http://tampermonkey.net/
-// @version      4.3
+// @version      4.6
 // @description  自动处理网站登录流程，包括账号管理等
 // @author       hanj1998@foxmail.com
 // @match        *://*/*
@@ -15,6 +15,15 @@
 // @license      MIT
 // ==/UserScript==
 
+// 2026-04-07 v4.6
+//  - 填充时间记录功能按网站区分
+// 2026-04-07 v4.5
+//  - 添加了填充时间记录功能
+//  - 填充成功后显示上一次填充时间
+// 2026-04-07 v4.4
+//  - 添加了填充统计功能，记录账号填充次数
+//  - 在脚本菜单中添加了"查看填充统计"选项
+//  - 在脚本菜单中添加了"重置填充计数器"选项
 // 2026-04-07 v4.3
 //  - 将菜单中的"添加网址"改为"添加当前网址"
 //  - 添加当前网址时检查是否包含login，否则提示添加失败
@@ -647,7 +656,35 @@
       console.log(`[${scriptName}] 密码输入框未找到`);
     }
 
-    showToast("账号已填充");
+    // 增加填充计数器
+    let fillCount = GM_getValue("fillCount", 0);
+    fillCount++;
+    GM_setValue("fillCount", fillCount);
+    console.log(`[${scriptName}] 填充次数: ${fillCount}`);
+
+    // 记录本次填充时间（按网站区分）
+    const lastFillTimeKey = "lastFillTime_" + host;
+    const lastFillTime = GM_getValue(lastFillTimeKey, null);
+    const currentTime = new Date();
+    GM_setValue(lastFillTimeKey, currentTime.getTime());
+
+    // 显示提醒，包括上一次填充时间
+    if (lastFillTime) {
+      const lastTime = new Date(lastFillTime);
+      const formattedLastTime = lastTime.toLocaleString();
+      showToast(`账号已填充\n上一次填充时间: ${formattedLastTime}`);
+    } else {
+      showToast("账号已填充");
+    }
+    console.log(
+      `[${scriptName}] 本次填充时间: ${currentTime.toLocaleString()}`,
+    );
+    if (lastFillTime) {
+      const lastTime = new Date(lastFillTime);
+      console.log(
+        `[${scriptName}] 上一次填充时间: ${lastTime.toLocaleString()}`,
+      );
+    }
   }
 
   // 主函数
@@ -729,6 +766,20 @@
       if (confirm("确定要清空所有自定义网址吗？")) {
         GM_setValue("customUrls", []);
         showToast("自定义网址已清空！");
+      }
+    });
+
+    // 查看填充统计信息菜单项
+    GM_registerMenuCommand("查看填充统计", () => {
+      const fillCount = GM_getValue("fillCount", 0);
+      alert(`填充统计信息\n\n总填充次数: ${fillCount}次`);
+    });
+
+    // 重置填充计数器菜单项
+    GM_registerMenuCommand("重置填充计数器", () => {
+      if (confirm("确定要重置填充计数器吗？")) {
+        GM_setValue("fillCount", 0);
+        showToast("填充计数器已重置！");
       }
     });
   }
