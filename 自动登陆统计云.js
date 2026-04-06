@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         统计云自动登陆
 // @namespace    http://tampermonkey.net/
-// @version      4.6
+// @version      4.7
 // @description  自动处理网站登录流程，包括账号管理等
 // @author       hanj1998@foxmail.com
 // @match        *://*/*
@@ -15,6 +15,8 @@
 // @license      MIT
 // ==/UserScript==
 
+// 2026-04-07 v4.7
+//  - 填充次数直接显示在脚本菜单文本中
 // 2026-04-07 v4.6
 //  - 填充时间记录功能按网站区分
 // 2026-04-07 v4.5
@@ -730,6 +732,9 @@
 
   // 注册脚本菜单项
   function registerMenuCommands() {
+    // 获取当前填充次数
+    const fillCount = GM_getValue("fillCount", 0);
+
     // 添加当前网址菜单项
     GM_registerMenuCommand("添加当前网址", () => {
       const currentUrl = window.location.href;
@@ -769,8 +774,8 @@
       }
     });
 
-    // 查看填充统计信息菜单项
-    GM_registerMenuCommand("查看填充统计", () => {
+    // 显示填充次数菜单项（直接显示在菜单文本中）
+    GM_registerMenuCommand(`填充次数: ${fillCount}次`, () => {
       const fillCount = GM_getValue("fillCount", 0);
       alert(`填充统计信息\n\n总填充次数: ${fillCount}次`);
     });
