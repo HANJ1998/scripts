@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         统计云自动登陆
 // @namespace    http://tampermonkey.net/
-// @version      4.2
+// @version      4.3
 // @description  自动处理网站登录流程，包括账号管理等
 // @author       hanj1998@foxmail.com
 // @match        *://*/*
@@ -15,6 +15,11 @@
 // @license      MIT
 // ==/UserScript==
 
+// 2026-04-07 v4.3
+//  - 将菜单中的"添加网址"改为"添加当前网址"
+//  - 添加当前网址时检查是否包含login，否则提示添加失败
+//  - 简化了网址匹配逻辑，只检查当前网址是否在列表中
+//  - 初始化时不再检查是否包含login，因为添加时已经检查
 // 2026-04-07 v4.2
 //  - 优化了初始化流程，先检查网址是否匹配，再执行后续操作
 //  - 调整了代码结构，将非方法代码提取到初始化函数中
@@ -688,20 +693,23 @@
 
   // 注册脚本菜单项
   function registerMenuCommands() {
-    // 添加网址菜单项
-    GM_registerMenuCommand("添加网址", () => {
-      const url = prompt("请输入要添加的网址（完整URL）:");
-      if (url) {
-        // 获取现有的自定义网址列表
-        let customUrls = GM_getValue("customUrls", []);
-        // 检查是否已存在
-        if (!customUrls.includes(url)) {
-          customUrls.push(url);
-          GM_setValue("customUrls", customUrls);
-          showToast("网址添加成功！");
-        } else {
-          showToast("该网址已存在！");
-        }
+    // 添加当前网址菜单项
+    GM_registerMenuCommand("添加当前网址", () => {
+      const currentUrl = window.location.href;
+      // 检查当前网址是否包含login
+      if (!currentUrl.includes("login")) {
+        showToast("添加失败：当前网址不包含login！");
+        return;
+      }
+      // 获取现有的自定义网址列表
+      let customUrls = GM_getValue("customUrls", []);
+      // 检查是否已存在
+      if (!customUrls.includes(currentUrl)) {
+        customUrls.push(currentUrl);
+        GM_setValue("customUrls", customUrls);
+        showToast("当前网址添加成功！");
+      } else {
+        showToast("该网址已存在！");
       }
     });
 
@@ -729,16 +737,8 @@
   function isUrlAllowed() {
     // 检查自定义网址
     const customUrls = GM_getValue("customUrls", []);
-    for (const url of customUrls) {
-      // 转义所有正则表达式特殊字符，然后恢复*作为通配符
-      const escapedUrl = escapeRegex(url).replace(/\\\*/g, ".*");
-      const regex = new RegExp(`^${escapedUrl}$`);
-      if (regex.test(window.location.href)) {
-        return true;
-      }
-    }
-
-    return false;
+    // 检查当前网址是否在列表中
+    return customUrls.includes(window.location.href);
   }
 
   // 初始化函数
@@ -753,9 +753,9 @@
       return;
     }
 
-    // 检查当前网址是否在允许列表中且包含login
-    if (!isUrlAllowed() || !window.location.href.includes("login")) {
-      console.log(`[${scriptName}] 网址不匹配或不是登录页面，脚本未运行`);
+    // 检查当前网址是否在允许列表中
+    if (!isUrlAllowed()) {
+      console.log(`[${scriptName}] 网址不匹配，脚本未运行`);
       return;
     }
 
