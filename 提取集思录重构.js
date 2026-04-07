@@ -120,10 +120,15 @@
     };
 
     // ===================== 5. 工具函数：提取单张表格的有效数据 =====================
-    const getValidTableData = (table, zhuanZhaiIdx) => {
+    const getValidTableData = (table, zhuanZhaiIdx, zhuanGuJiaIdx) => {
       return Array.from(table.querySelectorAll("tr"), (tr) => {
         const tds = tr.querySelectorAll("td");
         const rowData = Array.from(tds, (td) => td.textContent.trim());
+
+        // 先处理转股价列，在添加和删除列之前
+        if (zhuanGuJiaIdx !== -1 && rowData[zhuanGuJiaIdx]) {
+          rowData[zhuanGuJiaIdx] = cleanCell(rowData[zhuanGuJiaIdx]);
+        }
 
         // 从转债名称列提取强赎状态和详细信息
         let qiangShuStatus = "";
@@ -175,25 +180,25 @@
       }).filter((row) => row.length > 0);
     };
 
-    // ===================== 6. 收集所有数据表格（排除表头表，避免重复） =====================
+    // ===================== 6. 找到行号、操作和转股价列的索引 =====================
+    const rowNumberIndex = headers.findIndex((h) => h.includes("行号"));
+    const operationIndex = headers.findIndex((h) => h.includes("操作"));
+    const zhuanGuJiaIndex = headers.findIndex((h) => h.includes("转股价"));
+
+    // ===================== 7. 收集所有数据表格（排除表头表，避免重复） =====================
     let allData = Array.from(
       document.querySelectorAll("table:not(.jsl-table-header)"),
-      (table) => getValidTableData(table, zhuanZhaiIndex),
+      (table) => getValidTableData(table, zhuanZhaiIndex, zhuanGuJiaIndex),
     ).flat();
 
-    // ===================== 7. 空数据校验 =====================
+    // ===================== 8. 空数据校验 =====================
     if (allData.length === 0) {
       console.log("没有找到有效表格数据");
       return;
     }
 
-    // ===================== 8. 处理数据：去掉行号和操作列，转股价的文本只保留数字部分 =====================
+    // ===================== 9. 处理数据：去掉行号和操作列 =====================
     if (allData.length > 0) {
-      // 找到行号、操作和转股价列的索引
-      const rowNumberIndex = headers.findIndex((h) => h.includes("行号"));
-      const operationIndex = headers.findIndex((h) => h.includes("操作"));
-      const zhuanGuJiaIndex = headers.findIndex((h) => h.includes("转股价"));
-
       // 处理表头
       if (rowNumberIndex !== -1) {
         headers.splice(rowNumberIndex, 1);
@@ -224,16 +229,11 @@
           row.splice(operationIndex, 1);
         }
 
-        // 转股价的文本只保留数字部分，使用 cleanCell 函数处理
-        if (zhuanGuJiaIndex !== -1 && row[zhuanGuJiaIndex]) {
-          row[zhuanGuJiaIndex] = cleanCell(row[zhuanGuJiaIndex]);
-        }
-
         return row;
       });
     }
 
-    // ===================== 9. 在表头"转债名称"后插入新列 =====================
+    // ===================== 10. 在表头"转债名称"后插入新列 =====================
     if (zhuanZhaiIndex !== -1) {
       headers.splice(
         zhuanZhaiIndex + 1,
