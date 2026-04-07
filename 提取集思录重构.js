@@ -11,12 +11,6 @@
 (function () {
   "use strict";
 
-  // 状态变量
-  let kzzData = []; // 可转债数据
-  let qsData = []; // 强赎数据
-  let kzzExtracted = false; // 可转债是否已提取
-  let qsExtracted = false; // 强赎是否已提取
-
   // 提取表格数据的方法
   function extractTables() {
     // 清理单元格内容，提取数字部分
@@ -259,51 +253,13 @@
     }
 
     console.log("提取的表格数据：", allData);
-    return allData;
   }
 
-  // 创建三个按钮
-  function createButtons() {
-    // 提取可转债按钮
-    const extractKzzButton = document.createElement("button");
-    extractKzzButton.textContent = "提取可转债";
-    extractKzzButton.style.cssText = `
-            position: fixed;
-            top: 10px;
-            right: 330px;
-            z-index: 9999;
-            padding: 8px 16px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        `;
-
-    // 提取强赎回按钮
-    const extractQsButton = document.createElement("button");
-    extractQsButton.textContent = "提取强赎回";
-    extractQsButton.style.cssText = `
-            position: fixed;
-            top: 10px;
-            right: 220px;
-            z-index: 9999;
-            padding: 8px 16px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        `;
-
-    // 打印表格按钮
-    const printTableButton = document.createElement("button");
-    printTableButton.textContent = "打印表格";
-    printTableButton.style.cssText = `
+  // 创建提取表格按钮
+  function createExtractButton() {
+    const button = document.createElement("button");
+    button.textContent = "提取表格";
+    button.style.cssText = `
             position: fixed;
             top: 10px;
             right: 10px;
@@ -318,92 +274,16 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         `;
 
-    // 点击事件 - 提取可转债
-    extractKzzButton.addEventListener("click", () => {
-      kzzData = extractTables();
-      kzzExtracted = true;
-      qsExtracted = false;
-      alert('可转债数据提取成功，请点击"提取强赎回"按钮');
+    button.addEventListener("click", () => {
+      extractTables();
     });
-
-    // 点击事件 - 提取强赎回
-    extractQsButton.addEventListener("click", () => {
-      if (!kzzExtracted) {
-        alert('请先点击"提取可转债"按钮');
-        return;
-      }
-      qsData = extractTables();
-      qsExtracted = true;
-      alert('强赎数据提取成功，请点击"打印表格"按钮');
-    });
-
-    // 点击事件 - 打印表格
-    printTableButton.addEventListener("click", () => {
-      if (!kzzExtracted || !qsExtracted) {
-        alert('请先依次点击"提取可转债"和"提取强赎回"按钮');
-        return;
-      }
-
-      // 处理数据：合并强赎天计数
-      const mergedData = mergeData(kzzData, qsData);
-
-      // 打印表格
-      console.log("合并后的表格数据：", mergedData);
-      alert("表格数据已打印到控制台");
-    });
-
-    // 添加到页面
-    document.body.appendChild(extractKzzButton);
-    document.body.appendChild(extractQsButton);
-    document.body.appendChild(printTableButton);
-  }
-
-  // 合并数据：将强赎天计数添加到可转债数据中
-  function mergeData(kzzData, qsData) {
-    if (!kzzData || !qsData || kzzData.length === 0 || qsData.length === 0) {
-      return kzzData;
-    }
-
-    // 构建强赎数据映射：转债代码 -> 强赎天计数
-    const qsMap = {};
-    const qsHeader = qsData[0];
-    const qsCodeIndex = qsHeader.findIndex((h) => h.includes("转债代码"));
-    const qsDaysIndex = qsHeader.findIndex((h) => h.includes("强赎天计数"));
-
-    if (qsCodeIndex !== -1 && qsDaysIndex !== -1) {
-      for (let i = 1; i < qsData.length; i++) {
-        const row = qsData[i];
-        if (row[qsCodeIndex]) {
-          qsMap[row[qsCodeIndex]] = row[qsDaysIndex] || "";
-        }
-      }
-    }
-
-    // 处理可转债数据，添加强赎天计数列
-    const kzzHeader = kzzData[0];
-    const kzzCodeIndex = kzzHeader.findIndex((h) => h.includes("代码"));
-    const kzzNameIndex = kzzHeader.findIndex((h) => h.includes("转债名称"));
-
-    if (kzzCodeIndex !== -1 && kzzNameIndex !== -1) {
-      // 在表头中添加强赎天计数列
-      kzzHeader.splice(kzzNameIndex + 1, 0, "强赎天计数");
-
-      // 在数据行中添加强赎天计数
-      for (let i = 1; i < kzzData.length; i++) {
-        const row = kzzData[i];
-        const code = row[kzzCodeIndex];
-        const qsDays = qsMap[code] || "";
-        row.splice(kzzNameIndex + 1, 0, qsDays);
-      }
-    }
-
-    return kzzData;
+    document.body.appendChild(button);
   }
 
   // 页面加载完成后创建按钮
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", createButtons);
+    document.addEventListener("DOMContentLoaded", createExtractButton);
   } else {
-    createButtons();
+    createExtractButton();
   }
 })();
