@@ -1669,6 +1669,8 @@ function generateActivationCode(date) {
                             <div style="display:flex;align-items:center;gap:10px;">
                                 <button onclick="copyCompareCodes()" style="padding:6px 12px;background:white;color:#667eea;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:bold;">复制代码</button>
                                 <button onclick="updateBaselineAndClose()" style="padding:6px 12px;background:#ff9800;color:white;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:bold;">更新基准</button>
+                                <button onclick="showHistoryData()" style="padding:6px 12px;background:#2196f3;color:white;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:bold;">显示历史数据</button>
+                                <button onclick="analyzeData()" style="padding:6px 12px;background:#4caf50;color:white;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:bold;">数据分析</button>
                                 <button onclick="closeCompareModal()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">&times;</button>
                             </div>
                         </div>
@@ -1898,6 +1900,247 @@ function generateActivationCode(date) {
     // 关闭对比弹窗
     win.closeCompareModal = function () {
       const modal = win.document.getElementById("compareModal");
+      if (modal) modal.remove();
+    };
+
+    // 显示历史数据
+    win.showHistoryData = function () {
+      // 获取历史数据
+      let historyData = null;
+      try {
+        historyData = JSON.parse(GM_getValue(win.getScoreHistoryKey()));
+      } catch (e) {
+        console.error("获取历史数据时出错:", e);
+        win.showToast("没有历史数据", "error");
+        return;
+      }
+
+      if (!historyData || !historyData.scores) {
+        win.showToast("没有历史数据", "error");
+        return;
+      }
+
+      // 格式化时间戳
+      const formattedTime = new Date(historyData.timestamp).toLocaleString();
+      const scoreCount = historyData.scores.length;
+
+      // 显示历史数据弹窗
+      const modalHtml = `
+                <div id="historyModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1001;display:flex;align-items:center;justify-content:center;">
+                    <div style="background:white;border-radius:8px;max-width:600px;max-height:80vh;overflow:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                        <div style="padding:15px 20px;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:white;display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <h3 style="margin:0;">历史评分数据</h3>
+                                <small>基准时间: ${formattedTime}</small>
+                            </div>
+                            <button onclick="closeHistoryModal()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">&times;</button>
+                        </div>
+                        <table id="historyTable" style="width:100%;border-collapse:collapse;font-size:13px;">
+                            <thead>
+                                <tr style="background:#f5f5f5;">
+                                    <th style="padding:10px;border-bottom:2px solid #ddd;text-align:center;">排名</th>
+                                    <th style="padding:10px;border-bottom:2px solid #ddd;">代码</th>
+                                    <th style="padding:10px;border-bottom:2px solid #ddd;">转债名称</th>
+                                    <th style="padding:10px;border-bottom:2px solid #ddd;text-align:right;">评分A</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                            </tbody>
+                        </table>
+                        <div style="padding:15px;text-align:center;color:#666;font-size:12px;border-top:1px solid #eee;">
+                            共 ${scoreCount} 条历史数据
+                        </div>
+                    </div>
+                </div>
+            `;
+
+      win.document.body.insertAdjacentHTML("beforeend", modalHtml);
+
+      // 渲染历史数据
+      const tbody = win.document.getElementById("historyTableBody");
+      tbody.innerHTML = historyData.scores
+        .map((item, index) => {
+          return `
+                    <tr>
+                        <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${index + 1}</td>
+                        <td style="padding:8px;border-bottom:1px solid #eee;">${item.code}</td>
+                        <td style="padding:8px;border-bottom:1px solid #eee;">${item.name}</td>
+                        <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${item.score.toFixed(2)}</td>
+                    </tr>
+                `;
+        })
+        .join("");
+    };
+
+    // 关闭历史数据弹窗
+    win.closeHistoryModal = function () {
+      const modal = win.document.getElementById("historyModal");
+      if (modal) modal.remove();
+    };
+
+    // 数据分析
+    win.analyzeData = function () {
+      // 获取对比结果数据
+      const results = win._compareResults;
+      if (!results || results.length === 0) {
+        win.showToast("没有对比数据可分析", "error");
+        return;
+      }
+
+      // 获取历史数据
+      let historyData = null;
+      try {
+        historyData = JSON.parse(GM_getValue(win.getScoreHistoryKey()));
+      } catch (e) {
+        console.error("获取历史数据时出错:", e);
+        win.showToast("没有历史数据可分析", "error");
+        return;
+      }
+
+      if (!historyData || !historyData.scores) {
+        win.showToast("没有历史数据可分析", "error");
+        return;
+      }
+
+      // 分析数据
+      const top20Threshold = 20;
+
+      // 构建历史数据映射
+      const historyMap = {};
+      historyData.scores.forEach((item, index) => {
+        historyMap[item.code] = {
+          name: item.name,
+          rank: index + 1,
+          score: item.score,
+        };
+      });
+
+      // 构建当前数据映射
+      const currentMap = {};
+      results.forEach((item, index) => {
+        currentMap[item.code] = {
+          name: item.name,
+          rank: index + 1,
+          score: item.currentScore,
+        };
+      });
+
+      // 找出历史前20的转债
+      const historyTop20 = historyData.scores
+        .slice(0, top20Threshold)
+        .map((item) => item.code);
+
+      // 找出当前前20的转债
+      const currentTop20 = results
+        .slice(0, top20Threshold)
+        .map((item) => item.code);
+
+      // 找出掉出前20的转债
+      const droppedOut = [];
+      historyTop20.forEach((code) => {
+        if (!currentTop20.includes(code) && currentMap[code]) {
+          droppedOut.push({
+            code: code,
+            name: historyMap[code].name,
+            oldRank: historyMap[code].rank,
+            oldScore: historyMap[code].score,
+            newRank: currentMap[code].rank,
+            newScore: currentMap[code].score,
+          });
+        }
+      });
+
+      // 找出进入前20的转债
+      const newIn = [];
+      currentTop20.forEach((code) => {
+        if (!historyTop20.includes(code)) {
+          newIn.push({
+            code: code,
+            name: currentMap[code].name,
+            oldRank: historyMap[code] ? historyMap[code].rank : "-",
+            oldScore: historyMap[code] ? historyMap[code].score : "-",
+            newRank: currentMap[code].rank,
+            newScore: currentMap[code].score,
+          });
+        }
+      });
+
+      // 找出消失的转债（历史中有但当前没有的）
+      const historyCodes = new Set(historyData.scores.map((item) => item.code));
+      const currentCodes = new Set(results.map((item) => item.code));
+      const disappeared = [];
+      historyCodes.forEach((code) => {
+        if (!currentCodes.has(code)) {
+          disappeared.push(historyMap[code].name);
+        }
+      });
+
+      // 生成掉出前二十的转债列表HTML
+      const droppedOutHtml =
+        droppedOut.length > 0
+          ? droppedOut
+              .map(
+                (item) =>
+                  `${item.name}（历史：排名${item.oldRank}，评分${item.oldScore.toFixed(2)}；现在：排名${item.newRank}，评分${item.newScore.toFixed(2)}）`,
+              )
+              .join("<br>")
+          : "无";
+
+      // 生成进入前二十的转债列表HTML
+      const newInHtml =
+        newIn.length > 0
+          ? newIn
+              .map(
+                (item) =>
+                  `${item.name}（历史：排名${item.oldRank}，评分${item.oldScore === "-" ? "-" : item.oldScore.toFixed(2)}；现在：排名${item.newRank}，评分${item.newScore.toFixed(2)}）`,
+              )
+              .join("<br>")
+          : "无";
+
+      // 生成消失的转债列表HTML
+      const disappearedHtml =
+        disappeared.length > 0 ? disappeared.join("、") : "无";
+
+      // 显示分析结果弹窗
+      const modalHtml = `
+                <div id="analysisModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1001;display:flex;align-items:center;justify-content:center;">
+                    <div style="background:white;border-radius:8px;max-width:700px;max-height:80vh;overflow:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                        <div style="padding:15px 20px;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:white;display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <h3 style="margin:0;">数据分析结果</h3>
+                            </div>
+                            <button onclick="closeAnalysisModal()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">&times;</button>
+                        </div>
+                        <div style="padding:20px;">
+                            <div style="margin-bottom:20px;">
+                                <h4 style="margin:0 0 10px 0;color:#333;">掉出前二十的转债</h4>
+                                <div style="padding:10px;background:#f5f5f5;border-radius:4px;line-height:1.5;">
+                                    ${droppedOutHtml}
+                                </div>
+                            </div>
+                            <div style="margin-bottom:20px;">
+                                <h4 style="margin:0 0 10px 0;color:#333;">进入前二十的转债</h4>
+                                <div style="padding:10px;background:#f5f5f5;border-radius:4px;line-height:1.5;">
+                                    ${newInHtml}
+                                </div>
+                            </div>
+                            <div style="margin-bottom:20px;">
+                                <h4 style="margin:0 0 10px 0;color:#333;">消失的转债</h4>
+                                <div style="padding:10px;background:#f5f5f5;border-radius:4px;">
+                                    ${disappearedHtml}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+      win.document.body.insertAdjacentHTML("beforeend", modalHtml);
+    };
+
+    // 关闭数据分析弹窗
+    win.closeAnalysisModal = function () {
+      const modal = win.document.getElementById("analysisModal");
       if (modal) modal.remove();
     };
 
