@@ -3,14 +3,14 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.0
 // @description  获取网页上的表格内容，并在新页面展示
-// @author       佚名
+// @author       hanj1998@foxmail.com
 // @match        https://www.jisilu.cn/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_xmlhttpRequest
 // @connect      www.jisilu.cn
-// @updateURL    https://raw.githubusercontent.com/hanj2025/MyScript/main/提取集思录.js
-// @downloadURL  https://raw.githubusercontent.com/hanj2025/MyScript/main/提取集思录.js
+// @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/提取集思录.js
+// @downloadURL  https://raw.githubusercontent.com/hanj1998/MyScript/main/提取集思录.js
 // @license      MIT
 // ==/UserScript==
 
@@ -19,14 +19,22 @@
 // 2. 使用本脚本即表示您已充分阅读、理解并同意本协议，自愿承担所有使用风险。
 // 3. 因违规使用、滥用或二次分发造成的一切法律责任与经济损失，均由使用者自行承担，作者不承担任何责任。
 
+/**
+ * 生成激活码
+ * @param {Date} date - 日期对象，默认为当前日期
+ * @returns {string} 6位激活码
+ */
 function generateActivationCode(date) {
   const d = date || new Date();
   const year = d.getFullYear();
   const month = d.getMonth() + 1;
   const day = d.getDate();
 
+  // 种子值，用于生成激活码
   const seed = 20241117;
+  // 生成基础数值：年月日拼接
   const base = year * 10000 + month * 100 + day;
+  // 计算激活码：基础数值乘以种子值，取模1000000，补足6位
   const code = ((base * seed) % 1000000).toString().padStart(6, "0");
 
   return code;
@@ -39,6 +47,10 @@ function generateActivationCode(date) {
   const VALID_DAYS = 30;
   const WAIT_MINUTES = 5;
 
+  /**
+   * 获取存储的激活码
+   * @returns {string} 存储的激活码，若不存在则返回空字符串
+   */
   function getStoredCode() {
     try {
       return GM_getValue(ACTIVATION_KEY) || "";
@@ -48,15 +60,24 @@ function generateActivationCode(date) {
     }
   }
 
+  /**
+   * 存储激活码
+   * @param {string} code - 激活码
+   */
   function setStoredCode(code) {
     GM_setValue(ACTIVATION_KEY, code);
   }
 
+  /**
+   * 验证激活码是否有效
+   * @returns {boolean} 激活码是否有效
+   */
   function isValidActivation() {
     const storedCode = getStoredCode();
     if (!storedCode) return false;
 
     const today = new Date();
+    // 检查过去 VALID_DAYS 天内生成的激活码
     for (let i = 0; i < VALID_DAYS; i++) {
       const checkDate = new Date(today);
       checkDate.setDate(checkDate.getDate() - i);
@@ -67,8 +88,14 @@ function generateActivationCode(date) {
     return false;
   }
 
+  /**
+   * 验证输入的激活码
+   * @param {string} inputCode - 输入的激活码
+   * @returns {boolean} 激活码是否正确
+   */
   function verifyCode(inputCode) {
     const today = new Date();
+    // 检查过去 VALID_DAYS 天内生成的激活码
     for (let i = 0; i < VALID_DAYS; i++) {
       const checkDate = new Date(today);
       checkDate.setDate(checkDate.getDate() - i);
@@ -79,7 +106,12 @@ function generateActivationCode(date) {
     return false;
   }
 
+  /**
+   * 显示激活码输入对话框
+   * @param {Function} callback - 激活成功后的回调函数
+   */
   function showActivationDialog(callback) {
+    // 创建遮罩层
     const overlay = document.createElement("div");
     overlay.id = "activationOverlay";
     overlay.style.cssText = `
@@ -95,6 +127,7 @@ function generateActivationCode(date) {
             justify-content: center;
         `;
 
+    // 创建对话框
     const dialog = document.createElement("div");
     dialog.style.cssText = `
             background: white;
@@ -104,6 +137,7 @@ function generateActivationCode(date) {
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         `;
 
+    // 设置对话框内容
     dialog.innerHTML = `
             <h3 style="margin: 0 0 20px 0; color: #333;">请输入激活码</h3>
             <input type="text" id="activationInput" maxlength="6" placeholder="6位激活码" 
@@ -117,11 +151,13 @@ function generateActivationCode(date) {
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
 
+    // 获取DOM元素
     const input = document.getElementById("activationInput");
     const btn = document.getElementById("activationBtn");
     const msg = document.getElementById("activationMsg");
     const timer = document.getElementById("activationTimer");
 
+    // 倒计时功能
     let remainingSeconds = WAIT_MINUTES * 60;
     const countdown = setInterval(() => {
       remainingSeconds--;
@@ -137,6 +173,9 @@ function generateActivationCode(date) {
       }
     }, 1000);
 
+    /**
+     * 处理激活按钮点击事件
+     */
     function handleActivate() {
       const code = input.value.trim();
       if (code.length !== 6) {
@@ -159,6 +198,7 @@ function generateActivationCode(date) {
       }
     }
 
+    // 绑定事件
     btn.addEventListener("click", handleActivate);
     input.addEventListener("keypress", (e) => {
       if (e.key === "Enter") handleActivate();
@@ -166,6 +206,10 @@ function generateActivationCode(date) {
     input.focus();
   }
 
+  /**
+   * 检查激活状态
+   * @param {Function} callback - 激活成功后的回调函数
+   */
   function checkActivation(callback) {
     if (isValidActivation()) {
       callback();
@@ -174,10 +218,14 @@ function generateActivationCode(date) {
     }
   }
 
-  // 创建提取表格按钮
+  /**
+   * 创建提取表格按钮
+   */
   function createExtractButton() {
+    // 创建按钮元素
     const button = document.createElement("button");
-    button.textContent = "提取表格";
+    button.textContent = "提取可转债";
+    // 设置按钮样式
     button.style.cssText = `
             position: fixed;
             top: 10px;
@@ -193,9 +241,11 @@ function generateActivationCode(date) {
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         `;
 
+    // 绑定点击事件：检查激活状态后提取表格
     button.addEventListener("click", () => {
       checkActivation(extractTables);
     });
+    // 将按钮添加到页面
     document.body.appendChild(button);
   }
 
@@ -206,7 +256,7 @@ function generateActivationCode(date) {
     // ===================== 0. 检查当前网址 =====================
     const expectedUrl = "https://www.jisilu.cn/web/data/cb/list";
     if (window.location.href !== expectedUrl) {
-      alert("请点返回首页，依次点击：实时数据 ➡ 可转债");
+      alert("请返回首页，依次点击：实时数据 → 可转债");
       return;
     }
 
@@ -237,10 +287,10 @@ function generateActivationCode(date) {
         redeemResponse.data.forEach((item) => {
           redeemDataMap[item.bond_id] = item.redeem_status || "";
         });
-        console.log("✅ 已获取redeem数据:", redeemDataMap);
+        console.log("已获取强赎数据:", redeemDataMap);
       }
     } catch (e) {
-      console.error("获取redeem数据失败:", e);
+      console.error("获取强赎数据失败:", e);
     }
 
     // ===================== 1. 提取专属表头（常量声明，避免重复赋值） =====================
@@ -418,7 +468,6 @@ function generateActivationCode(date) {
     }
 
     // ===================== 7. 在表头"转债名称"后插入新列 =====================
-    // 注意：先插入强赎状态等6列，然后再在强赎状态后面插入强赎天计数
     if (zhuanZhaiIndex !== -1) {
       headers.splice(
         zhuanZhaiIndex + 1,
@@ -447,7 +496,10 @@ function generateActivationCode(date) {
       console.warn("未找到 openTableViewer 展示函数，数据已打印到控制台");
     }
   }
-  // 在新页面显示表格
+  /**
+   * 在新页面显示表格
+   * @param {Array} data - 表格数据，包含表头和数据行
+   */
   function openTableViewer(data) {
     const newWindow = window.open("", "_blank", "width=1000,height=800");
 
@@ -456,7 +508,11 @@ function generateActivationCode(date) {
       return;
     }
 
-    // 清理单元格内容，提取数字部分
+    /**
+     * 清理单元格内容，提取数字部分
+     * @param {string} text - 单元格文本
+     * @returns {string} 清理后的文本
+     */
     function cleanCell(text) {
       const trimmed = text.trim();
       const match = trimmed.match(/^(\d+\.?\d*)/);
@@ -1921,10 +1977,14 @@ function generateActivationCode(date) {
     win.loadPresetList();
     win.renderTable(win.tableData);
   }
-  // 页面加载完成后创建按钮
+
+  // ===================== 页面初始化 =====================
+  // 页面加载完成后创建提取表格按钮
   if (document.readyState === "loading") {
+    // 页面仍在加载中，等待DOM加载完成后创建按钮
     document.addEventListener("DOMContentLoaded", createExtractButton);
   } else {
+    // 页面已经加载完成，直接创建按钮
     createExtractButton();
   }
 })();
