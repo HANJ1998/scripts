@@ -1967,6 +1967,21 @@ function generateActivationCode(date) {
       }
 
       win.filteredData = filtered;
+
+      // 如果选择了评分A且勾选了升序，则排序
+      const score = win.document.getElementById("scoreSelect").value;
+      const asc = win.document.getElementById("sortScoreAsc").checked;
+      if (score === "scoreA" && asc) {
+        const header = filtered[0];
+        const rows = filtered.slice(1);
+        rows.sort((a, b) => {
+          const valA = parseFloat(win.calcScoreA(a)) || 0;
+          const valB = parseFloat(win.calcScoreA(b)) || 0;
+          return valA - valB;
+        });
+        win.filteredData = [header, ...rows];
+      }
+
       win.renderTable(win.filteredData);
       win.closeCodeFilterModal();
       win.showToast("已筛选出 " + (filtered.length - 1) + " 条数据", "success");
