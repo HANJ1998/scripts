@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         提取集思录
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  获取网页上的表格内容，并在新页面展示
 // @author       hanj1998@foxmail.com
 // @match        https://www.jisilu.cn/*
@@ -42,7 +42,7 @@ function generateActivationCode(date) {
 
 (function () {
   "use strict";
-
+  const VERSION = script.version;
   const ACTIVATION_KEY = "kezhuanzhai_activation_code";
   const VALID_DAYS = 30;
   const WAIT_MINUTES = 5;
@@ -224,7 +224,7 @@ function generateActivationCode(date) {
   function createExtractButton() {
     // 创建按钮元素
     const button = document.createElement("button");
-    button.textContent = "提取可转债";
+    button.textContent = `提取可转债v${VERSION}`;
     // 设置按钮样式
     button.style.cssText = `
             position: fixed;
