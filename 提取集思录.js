@@ -203,7 +203,14 @@ function generateActivationCode(date) {
    * 提取页面所有表格数据（排除专属表头表）+ 拼接表头 + 展示
    */
   async function extractTables() {
-    // ===================== 0. 请求redeem接口获取强赎天计数数据 =====================
+    // ===================== 0. 检查当前网址 =====================
+    const expectedUrl = "https://www.jisilu.cn/web/data/cb/list";
+    if (window.location.href !== expectedUrl) {
+      alert("请点返回首页，依次点击：实时数据 ➡ 可转债");
+      return;
+    }
+
+    // ===================== 1. 请求redeem接口获取强赎天计数数据 =====================
     let redeemDataMap = {};
     try {
       const redeemResponse = await new Promise((resolve, reject) => {
