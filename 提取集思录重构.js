@@ -48,8 +48,8 @@
    */
   function cleanText(name) {
     if (!name) return name;
-    // 只保留中文字符和数字，移除其他特殊字符
-    return name.replace(/[^\u4e00-\u9fa5\d]/g, "");
+    // 保留中文字符、英文字母和数字，移除其他特殊字符和不可见字符
+    return name.replace(/[^\u4e00-\u9fa5a-zA-Z\d]/g, "");
   }
 
   /**
@@ -149,8 +149,8 @@
     if (shuHuiJiaMatch)
       result.daoQiShuHuiJia = extractNumber(shuHuiJiaMatch[1]);
 
-    // 匹配"赎回价"但排除"到期赎回价"
-    const shuHuiJia2Match = title.match(/(?<!到期)赎回价[：:]\s*([^\n]+)/);
+    // 匹配"赎回价"但排除"到期赎回价"（使用兼容写法）
+    const shuHuiJia2Match = title.match(/(?:^|[^到])赎回价[：:]\s*([^\n]+)/);
     if (shuHuiJia2Match) result.shuHuiJia = extractNumber(shuHuiJia2Match[1]);
 
     return result;
@@ -494,13 +494,13 @@
 
     // 在表1的转债名称列后添加强赎天计数列
     const mergedHeaders = [...table1Headers];
-    const zhuanZhaiIndex = mergedHeaders.findIndex((h) =>
+    const zhuanZhaiIndexForHeader = mergedHeaders.findIndex((h) =>
       h.includes("转债名称"),
     );
 
-    if (zhuanZhaiIndex !== -1) {
+    if (zhuanZhaiIndexForHeader !== -1) {
       // 在强赎状态后面插入强赎天计数列（转债名称后第1列）
-      mergedHeaders.splice(zhuanZhaiIndex + 2, 0, "强赎天计数");
+      mergedHeaders.splice(zhuanZhaiIndexForHeader + 2, 0, "强赎天计数");
     }
 
     // 创建表2数据的映射，以转债代码为键
@@ -512,7 +512,7 @@
       table2Map[code] = qiangShuTian;
     }
 
-    // 找到现价、转股溢价率和剩余规模列的索引
+    // 找到现价、转股溢价率和剩余规模列的索引（在原始表头中）
     const xianJiaIndex = table1Headers.findIndex((h) => h.includes("现价"));
     const zhuanGuYiJiaLvIndex = table1Headers.findIndex((h) =>
       h.includes("转股溢价率"),
@@ -520,44 +520,91 @@
     const shengYuGuiMoIndex = table1Headers.findIndex((h) =>
       h.includes("剩余规模"),
     );
+    // 找到转债名称列的索引
+    const zhuanZhaiIndex = table1Headers.findIndex((h) =>
+      h.includes("转债名称"),
+    );
 
-    // 在表头最后添加评分A列
+    // 在表头最后添加评分A列、评分A排名列和历史排名列
     mergedHeaders.push("评分A");
+    mergedHeaders.push("评分A排名");
+    mergedHeaders.push("历史排名");
 
-    // 合并数据
-    const merged = [mergedHeaders]; // 表头
+    // 先收集所有数据并计算评分A
+    const tempData = [];
     for (let i = 1; i < table1.length; i++) {
-      const row = [...table1[i]];
-      const code = row[table1CodeIndex];
+      const originalRow = table1[i];
+      const code = originalRow[table1CodeIndex];
       const qiangShuTian = table2Map[code] || "";
 
-      // 找到转债名称列的索引
-      const zhuanZhaiIndex = table1Headers.findIndex((h) =>
-        h.includes("转债名称"),
-      );
-      if (zhuanZhaiIndex !== -1) {
-        // 在强赎状态后面插入强赎天计数（转债名称后第1列）
-        row.splice(zhuanZhaiIndex + 2, 0, qiangShuTian);
-      }
-
-      // 计算评分A：现价 + 转股溢价率 + 剩余规模(亿元)*10
+      // 计算评分A（在插入新列之前，使用原始数据）
       let pingFenA = "";
+      let pingFenAValue = Infinity; // 用于排名，空值排最后
       if (
         xianJiaIndex !== -1 &&
         zhuanGuYiJiaLvIndex !== -1 &&
         shengYuGuiMoIndex !== -1
       ) {
-        const xianJia = parseFloat(row[xianJiaIndex]) || 0;
-        const zhuanGuYiJiaLv = parseFloat(row[zhuanGuYiJiaLvIndex]) || 0;
-        const shengYuGuiMo = parseFloat(row[shengYuGuiMoIndex]) || 0;
+        const xianJia = parseFloat(originalRow[xianJiaIndex]) || 0;
+        const zhuanGuYiJiaLv = parseFloat(originalRow[zhuanGuYiJiaLvIndex]) || 0;
+        const shengYuGuiMo = parseFloat(originalRow[shengYuGuiMoIndex]) || 0;
         pingFenA = (xianJia + zhuanGuYiJiaLv + shengYuGuiMo * 10).toFixed(2);
+        pingFenAValue = parseFloat(pingFenA);
       }
 
-      // 在最后一列添加评分A
-      row.push(pingFenA);
+      // 复制行数据并插入强赎天计数
+      const row = [...originalRow];
+      if (zhuanZhaiIndex !== -1) {
+        // 在强赎状态后面插入强赎天计数（转债名称后第1列）
+        row.splice(zhuanZhaiIndex + 2, 0, qiangShuTian);
+      }
 
-      merged.push(row);
+      // 添加评分A
+      row.push(pingFenA);
+      
+      tempData.push({
+        row: row,
+        pingFenAValue: pingFenAValue,
+        originalIndex: i - 1 // 原始索引用于稳定排序
+      });
     }
+
+    // 按评分A排序计算排名（分数越小排名越靠前）
+    // 先按评分A值排序，值相同的按原始索引排序保证稳定性
+    const sortedData = [...tempData].sort((a, b) => {
+      if (a.pingFenAValue !== b.pingFenAValue) {
+        return a.pingFenAValue - b.pingFenAValue;
+      }
+      return a.originalIndex - b.originalIndex;
+    });
+
+    // 分配排名
+    const rankMap = new Map();
+    sortedData.forEach((item, index) => {
+      rankMap.set(item.originalIndex, index + 1); // 排名从1开始
+    });
+
+    // 加载保存的历史排名
+    const savedHistory = GM_getValue("jisilu_rank_history", null);
+    const historyRankData = savedHistory ? savedHistory.rankData : {};
+
+    // 计算代码列的实际索引（考虑插入强赎天计数后的偏移）
+    let actualCodeIndex = table1CodeIndex;
+    if (zhuanZhaiIndex !== -1 && table1CodeIndex > zhuanZhaiIndex + 2) {
+      // 如果代码列在插入位置之后，索引需要+1
+      actualCodeIndex = table1CodeIndex + 1;
+    }
+
+    // 合并数据并添加排名和历史排名
+    const merged = [mergedHeaders];
+    tempData.forEach((item, index) => {
+      const code = item.row[actualCodeIndex];
+      const rank = rankMap.get(index);
+      const historyRank = historyRankData[code] || "-";
+      item.row.push(rank.toString());
+      item.row.push(historyRank.toString());
+      merged.push(item.row);
+    });
 
     return merged;
   }
@@ -589,6 +636,14 @@
 
     // 获取iframe的document
     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    
+    // 检查是否成功获取iframe document
+    if (!iframeDoc) {
+      console.error('无法获取iframe document');
+      alert('创建窗口失败，请重试！');
+      iframe.remove();
+      return;
+    }
 
     // 构建HTML内容
     let html = `
@@ -853,6 +908,18 @@
           .preset-select {
             min-width: 120px;
           }
+          .filter-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
+          }
+          .content {
+            position: relative;
+          }
         </style>
       </head>
       <body>
@@ -952,20 +1019,24 @@
             <option value="">选择预设</option>
           </select>
           <button id="deletePreset" class="action-button delete-button">删除预设</button>
+          <button id="sortByScoreA" class="action-button save-button">按评分A排序</button>
+          <button id="saveRankHistory" class="action-button save-button">保存当前排名</button>
         </div>
       <div class="content">
         <table id="dataTable">
           <thead>
             <tr>
+              <th>序号</th>
               ${data[0].map((header) => `<th>${header}</th>`).join("")}
             </tr>
           </thead>
           <tbody>
             ${data
               .slice(1)
-              .map((row) => {
+              .map((row, index) => {
                 return `
                   <tr>
+                    <td>${index + 1}</td>
                     ${row.map((cell) => `<td>${cell}</td>`).join("")}
                   </tr>
                 `;
@@ -1009,7 +1080,7 @@
               "info": true,
               "autoWidth": false,
               "pageLength": 10000, // 设置一个较大的值，确保显示全部数据
-              "order": [[qiangShuStatusIndex, "desc"]], // 默认按强赎状态降序排序
+              "order": [], // 取消默认排序
               "language": {
                 "sProcessing": "处理中...",
                 "sLengthMenu": "显示 _MENU_ 条记录",
@@ -1182,18 +1253,122 @@
               }
             });
             
+            // 通用数值筛选函数
+            function checkNumberFilter(operator, value1, value2, actualValue) {
+              if (!operator) return true;
+              if (isNaN(actualValue)) return false;
+              if (operator === 'gte' && actualValue < value1) return false;
+              if (operator === 'lte' && actualValue > value1) return false;
+              if (operator === 'between' && (actualValue < value1 || actualValue > value2)) return false;
+              return true;
+            }
+            
+            // 更新序号列（第一列）
+            // data: 数据数组
+            // 返回: 更新序号后的数据
+            function updateRowNumbers(data) {
+              if (!data || data.length === 0) return data;
+              return data.map(function(row, index) {
+                // 更新第一列（序号列）为当前索引+1
+                row[0] = (index + 1).toString();
+                return row;
+              });
+            }
+            
+            // 通用排名计算和排序函数
+            // data: 数据数组
+            // scoreConfigs: 评分列配置数组 [{scoreKey: '评分A', rankKey: '评分A排名', ascending: true}, ...]
+            // 返回: 计算好排名并按第一个评分列排序后的数据
+            function calculateRanksAndSort(data, scoreConfigs) {
+              if (!data || data.length === 0 || !scoreConfigs || scoreConfigs.length === 0) {
+                return data;
+              }
+              
+              // 获取表头信息
+              const headers = [];
+              $('#dataTable th').each(function() {
+                headers.push($(this).text());
+              });
+              
+              // 查找各评分列和排名列的索引
+              const columnIndices = scoreConfigs.map(function(config) {
+                const scoreIndex = headers.findIndex(function(h) {
+                  return h.includes(config.scoreKey) && !h.includes(config.rankKey);
+                });
+                const rankIndex = headers.findIndex(function(h) {
+                  // 精确匹配排名列，排除"历史排名"等其他包含"排名"的列
+                  return h === config.rankKey || h.includes(config.rankKey + '(');
+                });
+                return {
+                  scoreIndex: scoreIndex,
+                  rankIndex: rankIndex,
+                  ascending: config.ascending !== false // 默认升序（小值排前）
+                };
+              });
+              
+              // 准备数据：收集每行的评分值
+              const scoredData = data.map(function(row, index) {
+                const scoreValues = columnIndices.map(function(colInfo) {
+                  if (colInfo.scoreIndex === -1) return { value: Infinity, valid: false };
+                  const val = parseFloat(row[colInfo.scoreIndex]);
+                  return { value: isNaN(val) ? Infinity : val, valid: !isNaN(val) };
+                });
+                return {
+                  row: row,
+                  scoreValues: scoreValues,
+                  originalIndex: index
+                };
+              });
+              
+              // 按第一个评分列排序（作为主要排序依据）
+              const primarySortIndex = 0;
+              scoredData.sort(function(a, b) {
+                const colInfo = columnIndices[primarySortIndex];
+                const aVal = a.scoreValues[primarySortIndex].value;
+                const bVal = b.scoreValues[primarySortIndex].value;
+                
+                if (aVal !== bVal) {
+                  return colInfo.ascending ? (aVal - bVal) : (bVal - aVal);
+                }
+                // 值相同则按原始顺序稳定排序
+                return a.originalIndex - b.originalIndex;
+              });
+              
+              // 为每个评分列计算排名
+              columnIndices.forEach(function(colInfo, colIdx) {
+                if (colInfo.rankIndex === -1 || colInfo.scoreIndex === -1) return;
+                
+                // 按当前列的值排序计算排名
+                const sortedForRank = [...scoredData].sort(function(a, b) {
+                  const aVal = a.scoreValues[colIdx].value;
+                  const bVal = b.scoreValues[colIdx].value;
+                  if (aVal !== bVal) {
+                    return colInfo.ascending ? (aVal - bVal) : (bVal - aVal);
+                  }
+                  return a.originalIndex - b.originalIndex;
+                });
+                
+                // 分配排名
+                const rankMap = new Map();
+                sortedForRank.forEach(function(item, rankIdx) {
+                  rankMap.set(item.originalIndex, (rankIdx + 1).toString());
+                });
+                
+                // 更新每行的排名
+                scoredData.forEach(function(item) {
+                  item.row[colInfo.rankIndex] = rankMap.get(item.originalIndex);
+                });
+              });
+              
+              // 返回排序后的数据（按主排序列的顺序）
+              return scoredData.map(function(item) {
+                return item.row;
+              });
+            }
+            
             // 统一应用所有筛选器
             function applyAllFilters() {
-              // 获取所有列的索引
-              let priceIndex = 0;
-              let premiumIndex = 0;
-              let yearsIndex = 0;
-              let scaleIndex = 0;
-              let stockPriceIndex = 0;
-              let stockNameIndex = 0;
-              let qiangShuStatusColIndex = 0;
-              let ratingColIndex = 0;
-              
+              // 使用外层作用域已声明的变量，避免重复声明
               $('#dataTable th').each(function(index) {
                 const text = $(this).text();
                 if (text.includes('现价')) priceIndex = index;
@@ -1202,8 +1377,8 @@
                 else if (text.includes('剩余规模')) scaleIndex = index;
                 else if (text.includes('正股价')) stockPriceIndex = index;
                 else if (text.includes('正股名称')) stockNameIndex = index;
-                else if (text.includes('强赎状态')) qiangShuStatusColIndex = index;
-                else if (text.includes('评级')) ratingColIndex = index;
+                else if (text.includes('强赎状态')) qiangShuStatusIndex = index;
+                else if (text.includes('评级')) ratingIndex = index;
               });
               
               // 获取筛选值
@@ -1237,7 +1412,7 @@
               const originalData = window.originalData;
               
               // 过滤数据
-              const filteredData = originalData.filter(function(row) {
+              let filteredData = originalData.filter(function(row) {
                 // 正股名称筛选
                 if (stockNameOperator && stockNameValue) {
                   const stockName = row[stockNameIndex] || '';
@@ -1246,74 +1421,46 @@
                 }
                 
                 // 现价筛选
-                if (priceOperator) {
-                  const price = parseFloat(row[priceIndex]);
-                  if (isNaN(price)) return false;
-                  if (priceOperator === 'gte' && price < priceValue1) return false;
-                  if (priceOperator === 'lte' && price > priceValue1) return false;
-                  if (priceOperator === 'between' && (price < priceValue1 || price > priceValue2)) return false;
-                }
+                if (!checkNumberFilter(priceOperator, priceValue1, priceValue2, parseFloat(row[priceIndex]))) return false;
                 
-                // 转股溢价率筛选
-                if (premiumOperator) {
-                  const premiumText = row[premiumIndex];
-                  if (premiumText === '' || premiumText === '-') return false;
-                  const premium = parseFloat(premiumText);
-                  if (isNaN(premium)) return false;
-                  if (premiumOperator === 'gte' && premium < premiumValue1) return false;
-                  if (premiumOperator === 'lte' && premium > premiumValue1) return false;
-                  if (premiumOperator === 'between' && (premium < premiumValue1 || premium > premiumValue2)) return false;
-                }
+                // 转股溢价率筛选（处理空值和'-'）
+                const premiumText = row[premiumIndex];
+                if (premiumOperator && (premiumText === '' || premiumText === '-')) return false;
+                if (!checkNumberFilter(premiumOperator, premiumValue1, premiumValue2, parseFloat(premiumText))) return false;
                 
-                // 剩余年限筛选
-                if (yearsOperator) {
-                  const yearsText = row[yearsIndex];
-                  if (yearsText === '' || yearsText === '-') return false;
-                  const years = parseFloat(yearsText);
-                  if (isNaN(years)) return false;
-                  if (yearsOperator === 'gte' && years < yearsValue1) return false;
-                  if (yearsOperator === 'lte' && years > yearsValue1) return false;
-                  if (yearsOperator === 'between' && (years < yearsValue1 || years > yearsValue2)) return false;
-                }
+                // 剩余年限筛选（处理空值和'-'）
+                const yearsText = row[yearsIndex];
+                if (yearsOperator && (yearsText === '' || yearsText === '-')) return false;
+                if (!checkNumberFilter(yearsOperator, yearsValue1, yearsValue2, parseFloat(yearsText))) return false;
                 
                 // 剩余规模筛选
-                if (scaleOperator) {
-                  const scale = parseFloat(row[scaleIndex]);
-                  if (isNaN(scale)) return false;
-                  if (scaleOperator === 'gte' && scale < scaleValue1) return false;
-                  if (scaleOperator === 'lte' && scale > scaleValue1) return false;
-                  if (scaleOperator === 'between' && (scale < scaleValue1 || scale > scaleValue2)) return false;
-                }
+                if (!checkNumberFilter(scaleOperator, scaleValue1, scaleValue2, parseFloat(row[scaleIndex]))) return false;
                 
                 // 正股价筛选
-                if (stockPriceOperator) {
-                  const stockPrice = parseFloat(row[stockPriceIndex]);
-                  if (isNaN(stockPrice)) return false;
-                  if (stockPriceOperator === 'gte' && stockPrice < stockPriceValue1) return false;
-                  if (stockPriceOperator === 'lte' && stockPrice > stockPriceValue1) return false;
-                  if (stockPriceOperator === 'between' && (stockPrice < stockPriceValue1 || stockPrice > stockPriceValue2)) return false;
-                }
+                if (!checkNumberFilter(stockPriceOperator, stockPriceValue1, stockPriceValue2, parseFloat(row[stockPriceIndex]))) return false;
                 
                 // 强赎状态筛选
                 if (currentSelectedStatuses.length > 0) {
-                  const qiangShuStatus = row[qiangShuStatusColIndex] || '';
+                  const qiangShuStatus = row[qiangShuStatusIndex] || '';
                   if (!currentSelectedStatuses.includes(qiangShuStatus)) return false;
                 }
                 
                 // 评级筛选
                 if (currentSelectedRatings.length > 0) {
-                  const rating = row[ratingColIndex] || '';
+                  const rating = row[ratingIndex] || '';
                   if (!currentSelectedRatings.includes(rating)) return false;
                 }
                 
                 return true;
               });
               
-              // 清除表格并重新加载过滤后的数据
+              // 重新计算序号
+              filteredData = updateRowNumbers(filteredData);
+              
+              // 清除表格并重新加载过滤后的数据（仅筛选，不排序）
               table.clear().rows.add(filteredData).draw();
               
-              // 更新记录数量
-              $('#recordCount').text('记录数量: ' + filteredData.length);
+              // 筛选完成
             }
             
             // 监听操作符变化，控制第二个输入框的显示
@@ -1353,11 +1500,91 @@
               // 重置预设选择
               $('#presetSelect').val('');
               
-              // 重新加载原始数据
-              table.clear().rows.add(window.originalData).draw();
+              // 重新加载原始数据并计算排名
+              const scoreColumns = [
+                { scoreKey: '评分A', rankKey: '评分A排名', ascending: true }
+              ];
+              let sortedData = calculateRanksAndSort(window.originalData, scoreColumns);
               
-              // 更新记录数量
-              $('#recordCount').text('记录数量: ' + window.originalData.length);
+              // 重新计算序号
+              sortedData = updateRowNumbers(sortedData);
+              
+              table.clear().rows.add(sortedData).draw();
+              
+              // 重置完成
+            }
+            
+            // 按评分A排序并重算排名（独立功能）
+            function sortByScoreA() {
+              // 获取当前表格中的数据
+              const currentData = [];
+              table.rows().every(function() {
+                const rowData = this.data();
+                currentData.push(rowData);
+              });
+              
+              if (currentData.length === 0) {
+                return;
+              }
+              
+              // 配置评分列
+              const scoreColumns = [
+                { scoreKey: '评分A', rankKey: '评分A排名', ascending: true }
+              ];
+              
+              // 计算排名并排序
+              let sortedData = calculateRanksAndSort(currentData, scoreColumns);
+              
+              // 重新计算序号
+              sortedData = updateRowNumbers(sortedData);
+              
+              // 重新加载排序后的数据
+              table.clear().rows.add(sortedData).draw();
+            }
+            
+            // 保存当前排名历史
+            function saveRankHistory() {
+              // 获取当前表格中的数据和排名
+              const rankData = {};
+              const codeIndex = 0; // 代码列通常是第一列
+              let rankIndex = -1;
+              
+              // 查找评分A排名列的索引
+              $('#dataTable th').each(function(index) {
+                if ($(this).text().includes('评分A排名')) {
+                  rankIndex = index;
+                }
+              });
+              
+              if (rankIndex === -1) {
+                alert('未找到评分A排名列！');
+                return;
+              }
+              
+              // 收集当前排名数据（代码 -> 排名）
+              table.rows().every(function() {
+                const rowData = this.data();
+                const code = rowData[codeIndex];
+                const rank = rowData[rankIndex];
+                if (code && rank) {
+                  rankData[code] = rank;
+                }
+              });
+              
+              // 保存到本地存储
+              const saveData = {
+                timestamp: new Date().toISOString(),
+                date: new Date().toLocaleString('zh-CN'),
+                rankData: rankData
+              };
+              
+              // 使用 GM_setValue 保存（跨页面持久化）
+              window.parent.postMessage({
+                type: 'jisilu_save_rank_history',
+                data: saveData
+              }, '*');
+              
+              alert('排名已保存！');
             }
             
             // 获取当前筛选条件
@@ -1553,6 +1780,8 @@
             $('#resetFilters').on('click', resetAllFilters);
             $('#savePreset').on('click', savePreset);
             $('#deletePreset').on('click', deletePreset);
+            $('#sortByScoreA').on('click', sortByScoreA);
+            $('#saveRankHistory').on('click', saveRankHistory);
             $('#presetSelect').on('change', usePreset);
             
             // 加载预设列表
@@ -1734,6 +1963,10 @@
         },
         "*",
       );
+    } else if (event.data.type === "jisilu_save_rank_history") {
+      // 保存排名历史
+      const historyData = event.data.data;
+      GM_setValue("jisilu_rank_history", historyData);
     }
   });
 })();
