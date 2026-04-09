@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         提取集思录
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  获取网页上的表格内容，并在新页面展示
 // @author       hanj1998@foxmail.com
 // @match        https://www.jisilu.cn/*
@@ -42,7 +42,7 @@ function generateActivationCode(date) {
 
 (function () {
   "use strict";
-  const VERSION = script.version;
+  const VERSION = GM_info.script.version;
   const ACTIVATION_KEY = "kezhuanzhai_activation_code";
   const VALID_DAYS = 30;
   const WAIT_MINUTES = 5;
