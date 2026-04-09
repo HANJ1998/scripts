@@ -275,6 +275,7 @@ function generateActivationCode(date) {
             try {
               const data = JSON.parse(res.responseText);
               resolve(data);
+              console.log("强赎响应：", data);
             } catch (e) {
               reject(e);
             }
@@ -287,10 +288,9 @@ function generateActivationCode(date) {
         redeemResponse.data.forEach((item) => {
           redeemDataMap[item.bond_id] = item.redeem_status || "";
         });
-        console.log("已获取强赎数据:", redeemDataMap);
       }
     } catch (e) {
-      console.error("获取强赎数据失败:", e);
+      console.error("解析强赎天计数失败:", e);
     }
 
     // ===================== 1. 提取专属表头（常量声明，避免重复赋值） =====================
