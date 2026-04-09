@@ -36,7 +36,7 @@ function generateActivationCode(date) {
   "use strict";
 
   const ACTIVATION_KEY = "kezhuanzhai_activation_code";
-  const VALID_DAYS = 7;
+  const VALID_DAYS = 30;
   const WAIT_MINUTES = 5;
 
   function getStoredCode() {
