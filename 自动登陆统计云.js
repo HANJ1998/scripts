@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         统计云自动登陆
 // @namespace    http://tampermonkey.net/
-// @version      4.7
+// @version      4.8
 // @description  自动处理网站登录流程，包括账号管理等
 // @author       hanj1998@foxmail.com
 // @match        *://*/*
@@ -15,6 +15,8 @@
 // @license      MIT
 // ==/UserScript==
 
+// 2026-04-07 v4.8
+//  - 修复了菜单展示逻辑，确保在所有网址上都能正常显示
 // 2026-04-07 v4.7
 //  - 填充次数直接显示在脚本菜单文本中
 // 2026-04-07 v4.6
@@ -800,7 +802,6 @@
   // 初始化函数
   function initializeScript() {
     addCustomStyles();
-    registerMenuCommands();
 
     // 检查自定义网址列表长度
     const customUrls = GM_getValue("customUrls", []);
@@ -836,4 +837,7 @@
   } else {
     initializeScript();
   }
+
+  // 注册菜单（始终显示，不受网址匹配限制）
+  registerMenuCommands();
 })();
