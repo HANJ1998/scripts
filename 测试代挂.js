@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         测试代挂网页
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/hanj1998
 // @version      0.1
 // @description  try to take over the world!
 // @author       hanj.cn@outlook.com

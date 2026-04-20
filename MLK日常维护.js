@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         名录库助手
-// @namespace    https://gitee.com/hanj1998
+// @namespace    https://github.com/hanj1998
 // @version      4.4
 // @description  全自动改错
 // @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/MLK日常维护.js

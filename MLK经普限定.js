@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         名录库终结者
-// @namespace    https://gitee.com/hanj1998
+// @namespace    https://github.com/hanj1998
 // @version      1.1.1
 // @description  经济普查是真的累！！！
 // @author       hanj-cn@qq.com

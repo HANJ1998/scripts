@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         批量下载
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/hanj1998
 // @version      1.2
 // @description  Automated document download solution for government service portals
 // @author       Professional Developer

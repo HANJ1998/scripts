@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         CSDN一键点赞收藏加评论
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/hanj1998
 // @version      1.2
 // @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/CSDN一键三连.js
 // @downloadURL  https://raw.githubusercontent.com/hanj1998/MyScript/main/CSDN一键三连.js

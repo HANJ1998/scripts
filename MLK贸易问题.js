@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         名录库助手贸易专版
-// @namespace    https://gitee.com/hanj1998
+// @namespace    https://github.com/hanj1998
 // @version      1.2
 // @description  贸易问题专版 - 自动处理主要业务活动
 // @author       GOD

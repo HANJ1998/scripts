@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         统计云自动登陆
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/hanj1998
 // @version      4.8
 // @description  自动处理网站登录流程，包括账号管理等
 // @author       hanj1998@foxmail.com
