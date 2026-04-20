@@ -6,8 +6,8 @@
 // @author       You
 // @match        http*://scjg.hubei.gov.cn/hbssj/meta/HBSSJ/analyses/CSTM-17956/*
 // @grant        none
-// @updateURL    https://raw.githubusercontent.com/hanj2025/MyScript/main/双随机脚本.js
-// @downloadURL  https://raw.githubusercontent.com/hanj2025/MyScript/main/双随机脚本.js
+// @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/双随机脚本.js
+// @downloadURL  https://raw.githubusercontent.com/hanj1998/MyScript/main/双随机脚本.js
 // @license      MIT    
 // ==/UserScript==
 

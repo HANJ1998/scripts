@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         名录库助手
-// @namespace    https://gitee.com/hanj-cn
+// @namespace    https://gitee.com/hanj1998
 // @version      4.4
 // @description  全自动改错
-// @updateURL    https://raw.githubusercontent.com/hanj2025/MyScript/main/MLK日常维护.js
-// @downloadURL  https://raw.githubusercontent.com/hanj2025/MyScript/main/MLK日常维护.js
+// @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/MLK日常维护.js
+// @downloadURL  https://raw.githubusercontent.com/hanj1998/MyScript/main/MLK日常维护.js
 // @author       GOD
 // @match        *://tjymlk.stats.gov.cn/*
 // @grant        GM_xmlhttpRequest
@@ -270,7 +270,7 @@
           document,
           null,
           XPathResult.FIRST_ORDERED_NODE_TYPE,
-          null
+          null,
         ).singleNodeValue;
 
         // 2. 检查元素是否存在
@@ -287,9 +287,9 @@
 
         // 4. 手动触发change事件
         // 创建并派发标准的change事件，让系统感知到选择变更
-        const changeEvent = new Event('change', {
+        const changeEvent = new Event("change", {
           bubbles: true, // 事件冒泡（模拟用户操作）
-          cancelable: true
+          cancelable: true,
         });
         selectElement.dispatchEvent(changeEvent);
       },
@@ -301,7 +301,7 @@
           document,
           null,
           XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-          null
+          null,
         );
         const nodes = [];
         for (let i = 0; i < result.snapshotLength; i++) {
@@ -318,7 +318,7 @@
             document,
             null,
             XPathResult.FIRST_ORDERED_NODE_TYPE,
-            null
+            null,
           ).singleNodeValue;
 
           if (!element) {
@@ -368,7 +368,7 @@
             document,
             null,
             XPathResult.FIRST_ORDERED_NODE_TYPE,
-            null
+            null,
           ).singleNodeValue;
           return element ? element.value : null;
         } catch (error) {
@@ -385,7 +385,7 @@
             document,
             null,
             XPathResult.FIRST_ORDERED_NODE_TYPE,
-            null
+            null,
           ).singleNodeValue;
         } catch (error) {
           MLK.UI.log(`查找元素失败: ${error.message}`, "error");
@@ -416,7 +416,7 @@
             if (address.includes(streetName)) {
               // 从areaCode中查找对应的街道完整名称和代码
               for (const [name, code] of Object.entries(
-                MLK.AreaData.areaCodeList
+                MLK.AreaData.areaCodeList,
               )) {
                 if (name === streetName) {
                   areaCode = Math.floor(code / 10) * 10 + 1;
@@ -441,7 +441,7 @@
           document,
           null,
           XPathResult.FIRST_ORDERED_NODE_TYPE,
-          null
+          null,
         );
         return result.singleNodeValue;
       },
@@ -455,7 +455,7 @@
           document,
           null,
           XPathResult.FIRST_ORDERED_NODE_TYPE,
-          null
+          null,
         );
         const targetElement = targetResult.singleNodeValue;
         return targetElement?.lastElementChild || null;
@@ -470,7 +470,7 @@
           document,
           null,
           XPathResult.FIRST_ORDERED_NODE_TYPE,
-          null
+          null,
         );
         return result.singleNodeValue;
       },
@@ -762,13 +762,12 @@
       async analyzeCompany(companyName) {
         try {
           // 步骤1：通过AI获取主要业务活动
-          const activityResult = await this.getBusinessActivityFromAI(
-            companyName
-          );
+          const activityResult =
+            await this.getBusinessActivityFromAI(companyName);
 
           // 步骤2：通过业务活动获取行业代码
           const industryResult = await this.getIndustryCodeFromAPI(
-            activityResult.businessActivity
+            activityResult.businessActivity,
           );
 
           // 返回组合结果
@@ -783,7 +782,7 @@
         } catch (error) {
           MLK.UI.log(
             `分析企业 "${companyName}" 时发生错误: ${error.message}`,
-            "error"
+            "error",
           );
           return {
             companyName: companyName,
@@ -848,8 +847,8 @@
                 if (response.status !== 200) {
                   reject(
                     new Error(
-                      `AI API请求失败: ${response.status} ${response.statusText}`
-                    )
+                      `AI API请求失败: ${response.status} ${response.statusText}`,
+                    ),
                   );
                   return;
                 }
@@ -863,7 +862,7 @@
                 // 第一步：使用正则表达式只保留汉字、英文字母和数字
                 businessActivity = aiResponse.replace(
                   /[^\u4e00-\u9fa5a-zA-Z0-9]/g,
-                  ""
+                  "",
                 );
 
                 // 第二步：去除可能的前缀词语
@@ -878,7 +877,7 @@
                 for (const prefix of prefixes) {
                   if (businessActivity.startsWith(prefix)) {
                     businessActivity = businessActivity.substring(
-                      prefix.length
+                      prefix.length,
                     );
                     break;
                   }
@@ -889,7 +888,7 @@
                 if (explanationIndex > 0) {
                   businessActivity = businessActivity.substring(
                     0,
-                    explanationIndex
+                    explanationIndex,
                   );
                 }
 
@@ -900,7 +899,7 @@
 
                 MLK.UI.log(
                   `AI分析结果(清理后): ${businessActivity}`,
-                  "success"
+                  "success",
                 );
                 resolve({ businessActivity });
               } catch (error) {
@@ -961,7 +960,7 @@
                 const bestMatch = data.data.Codes[0];
                 MLK.UI.log(
                   `获取行业代码: ${bestMatch.Code} ${bestMatch.Name}`,
-                  "success"
+                  "success",
                 );
 
                 // 检查是否需要设置经营形式和零售业态
@@ -972,7 +971,7 @@
                     MLK.Utils.setValueByXpath(
                       '//*[@id="selJYXS"]/input',
                       "1",
-                      "经营形式"
+                      "经营形式",
                     );
                   }, 500);
                 }
@@ -983,7 +982,7 @@
                     MLK.Utils.setValueByXpath(
                       '//*[@id="selLSYT1"]/input',
                       "1050",
-                      "零售业态1"
+                      "零售业态1",
                     );
                   }, 700);
                 }
@@ -996,7 +995,7 @@
               } catch (error) {
                 MLK.UI.log(
                   `处理行业代码API响应失败: ${error.message}`,
-                  "error"
+                  "error",
                 );
                 reject(error);
               }
@@ -1031,7 +1030,7 @@
           return MLK.Utils.setValueByXpath(
             '//*[@id="selLSYT1"]/input',
             "1050",
-            "零售业态1"
+            "零售业态1",
           );
         }
         return false;
@@ -1075,7 +1074,7 @@
           for (const [full, half] of Object.entries(fullToHalfMap)) {
             cleanedAddress = cleanedAddress.replace(
               new RegExp(full, "g"),
-              half
+              half,
             );
           }
 
@@ -1103,7 +1102,7 @@
           if (isAllDigitsOrLetters || cleanedAddress.length < 2) {
             // 尝试获取单位名称作为补充
             const companyName = MLK.Utils.getValueByXpath(
-              '//*[@id="dwmc"]/input'
+              '//*[@id="dwmc"]/input',
             );
 
             if (companyName && companyName.trim() !== "") {
@@ -1258,7 +1257,7 @@
 
         // 过滤掉空白项
         const filteredArray = textArray.filter(
-          (item) => item && item.trim() !== ""
+          (item) => item && item.trim() !== "",
         );
 
         if (filteredArray.length === 0) {
@@ -1277,7 +1276,7 @@
         // 设置处理后的文本
         return MLK.Utils.setValueByXpath(
           '//*[@id="zyywhd1"]/input',
-          selectedText
+          selectedText,
         );
       },
 
@@ -1325,7 +1324,7 @@
       fixOperatingStatus() {
         let success = MLK.Utils.setValueByXpath(
           '//*[@id="selYYZT"]/input',
-          "1"
+          "1",
         );
 
         // 如果是企业，还需要设置开业年月，同时营业收入为0
@@ -1405,27 +1404,27 @@
         let success = true;
         success &= MLK.Utils.setValueByXpath(
           '//*[@id="zyywhd1"]/input',
-          result.businessActivity
+          result.businessActivity,
         );
         success &= MLK.Utils.setValueByXpath(
           '//*[@id="hydm"]/input',
           result.industryCode,
-          "行业代码"
+          "行业代码",
         );
 
         return success;
       },
 
       /**
-      * 通用修复2026年3月3日
-      */
+       * 通用修复2026年3月3日
+       */
       async universalRepair() {
         MLK.ErrorFixer.fixOperatingStatus();
         MLK.ErrorFixer.fixOpeningDate();
         // 235.核实情况为空，如本单位已调查核实，请填写！
         MLK.Utils.setSelectValueByXpath("//*[@id='selHSQK']/select", 1);
-        // 244.单位注册地详细地址是否与单位所在地详细地址一致”所有单位不得为空，且取值为1或2 
-        MLK.Utils.setSelectValueByXpath("//*[@id='dzsfyz']/select", 1)
+        // 244.单位注册地详细地址是否与单位所在地详细地址一致”所有单位不得为空，且取值为1或2
+        MLK.Utils.setSelectValueByXpath("//*[@id='dzsfyz']/select", 1);
       },
 
       /**
@@ -1435,7 +1434,7 @@
       async fixIndustryCode() {
         //获取主要业务活动1
         let businessActivity = MLK.Utils.getValueByXpath(
-          '//*[@id="zyywhd1"]/input'
+          '//*[@id="zyywhd1"]/input',
         );
         //如果主要业务活动1为空，无法处理
         if (!businessActivity) {
@@ -1445,14 +1444,13 @@
 
         //获取行业代码
         try {
-          let industryResult = await MLK.DataAnalysis.getIndustryCodeFromAPI(
-            businessActivity
-          );
+          let industryResult =
+            await MLK.DataAnalysis.getIndustryCodeFromAPI(businessActivity);
           //设置行业代码
           return MLK.Utils.setValueByXpath(
             '//*[@id="hydm"]/input',
             industryResult.code,
-            "行业代码"
+            "行业代码",
           );
         } catch (error) {
           MLK.UI.log(`获取行业代码失败: ${error.message}`, "error");
@@ -1511,7 +1509,7 @@
             MLK.UI.log(`正在修复错误: ${errorCode}`, "info");
 
             //通用修复2025年9月9日10点01分
-            MLK.ErrorFixer.universalRepair()
+            MLK.ErrorFixer.universalRepair();
 
             switch (errorCode) {
               case "090": // 主要业务活动1不能为空
@@ -1596,7 +1594,7 @@
 
           MLK.UI.log(
             `修复了 ${fixed}/${errorList.length} 个错误`,
-            fixed > 0 ? "success" : "warning"
+            fixed > 0 ? "success" : "warning",
           );
           return fixed > 0;
         } catch (error) {
@@ -1609,7 +1607,7 @@
       async manualFix() {
         try {
           const button = document.querySelector(
-            "#mlk-helper button:nth-child(1)"
+            "#mlk-helper button:nth-child(1)",
           );
           button.disabled = true;
 
@@ -1620,7 +1618,7 @@
           MLK.UI.showMessage("修复出错", "error");
         } finally {
           const button = document.querySelector(
-            "#mlk-helper button:nth-child(1)"
+            "#mlk-helper button:nth-child(1)",
           );
           button.disabled = false;
         }
@@ -1629,7 +1627,7 @@
       // 自动模式开关
       toggleAutoMode() {
         const button = document.querySelector(
-          "#mlk-helper button:nth-child(2)"
+          "#mlk-helper button:nth-child(2)",
         );
 
         // 如果已在运行中，则停止
@@ -1654,7 +1652,7 @@
 
           MLK.UI.showMessage(
             `处理完成！共处理 ${MLK.State.processedCount} 家企业，成功 ${MLK.State.successCount} 家，用时 ${timeStr}`,
-            "success"
+            "success",
           );
           return;
         }
@@ -1683,7 +1681,7 @@
         MLK.State.timer = setInterval(async function () {
           try {
             const newCompany = await MLK.Core.autoProcessCompany(
-              MLK.State.currentCompany
+              MLK.State.currentCompany,
             );
             if (newCompany && newCompany !== MLK.State.currentCompany) {
               MLK.State.currentCompany = newCompany;
@@ -1698,7 +1696,7 @@
             if (timeElapsed > MLK.Config.AUTO_TIMEOUT) {
               MLK.UI.log(
                 "30秒内未检测到企业变化，尝试点击下一个按钮",
-                "warning"
+                "warning",
               );
 
               // 尝试点击"下一个"按钮恢复
@@ -1739,7 +1737,7 @@
         try {
           // 获取企业名称
           const companyName = MLK.Utils.getValueByXpath(
-            '//*[@id="dwmc"]/input'
+            '//*[@id="dwmc"]/input',
           );
           if (!companyName || companyName === companyOld) return companyOld;
 
@@ -1750,7 +1748,7 @@
             '//*[@id="content"]/section[2]/common-project-bill/common-bill/div/div[1]/mat-drawer-container/mat-drawer/div/common-bill-check-list/div/div/div[2]/div[2]/div[1]/div';
           const errorList = MLK.Utils.getAllElementsTextByXPath(xpathError);
           const has090Error = errorList.some((error) =>
-            error.startsWith("090")
+            error.startsWith("090"),
           );
 
           // 修复错误并检查是否成功
@@ -1784,16 +1782,16 @@
           if (has090Error) {
             MLK.UI.log(
               "检测到090错误，保存前确认主要业务活动和行业代码已填写",
-              "info"
+              "info",
             );
 
             // 创建检查字段函数
             const checkFieldsFilled = () => {
               const businessActivity = MLK.Utils.getValueByXpath(
-                '//*[@id="zyywhd1"]/input'
+                '//*[@id="zyywhd1"]/input',
               );
               const industryCode = MLK.Utils.getValueByXpath(
-                '//*[@id="hydm"]/input'
+                '//*[@id="hydm"]/input',
               );
               return (
                 businessActivity &&
@@ -1806,7 +1804,7 @@
             if (!checkFieldsFilled()) {
               MLK.UI.log(
                 "主要业务活动或行业代码未正确填写，等待API响应...",
-                "warning"
+                "warning",
               );
 
               // 使用Promise.race实现超时等待
@@ -1832,7 +1830,7 @@
 
                   // 超时Promise
                   new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("等待填写超时")), 10000)
+                    setTimeout(() => reject(new Error("等待填写超时")), 10000),
                   ),
                 ]);
               } catch (error) {
@@ -1863,10 +1861,10 @@
 
             // 最后再检查一次
             const businessActivity = MLK.Utils.getValueByXpath(
-              '//*[@id="zyywhd1"]/input'
+              '//*[@id="zyywhd1"]/input',
             );
             const industryCode = MLK.Utils.getValueByXpath(
-              '//*[@id="hydm"]/input'
+              '//*[@id="hydm"]/input',
             );
 
             if (
@@ -1876,7 +1874,7 @@
             ) {
               MLK.UI.log(
                 "主要业务活动或行业代码依然未正确填写，无法继续",
-                "error"
+                "error",
               );
               return companyOld;
             } else {

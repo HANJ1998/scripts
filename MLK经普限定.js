@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         名录库终结者
-// @namespace    https://gitee.com/hanj-cn
+// @namespace    https://gitee.com/hanj1998
 // @version      1.1.1
 // @description  经济普查是真的累！！！
 // @author       hanj-cn@qq.com
-// @updateURL    https://raw.githubusercontent.com/hanj2025/MyScript/main/MLK经普限定.js
-// @downloadURL  https://raw.githubusercontent.com/hanj2025/MyScript/main/MLK经普限定.js
+// @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/MLK经普限定.js
+// @downloadURL  https://raw.githubusercontent.com/hanj1998/MyScript/main/MLK经普限定.js
 // @grant        unsafeWindow
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -34,7 +34,7 @@
         "http://10.42.31.167/tjmlk/Modules/RecordView/RecordView.aspx?E=%u6cd5%u4eba%u5355%u4f4d%u8868%u7ef4%u62a4",
         "http://10.42.31.167/tjmlk/Modules/RecordView/RecordView.aspx?E=%e6%b3%95%e4%ba%ba%e5%8d%95%e4%bd%8d%e8%a1%a8%e7%bb%b4%e6%8a%a4",
         "http://10.42.31.167/tjmlk/Modules/RecordView/RecordView.aspx?E=%u4ea7%u4e1a%u6d3b%u52a8%u5355%u4f4d%u8868%u7ef4%u62a4",
-        "http://10.42.31.167/tjmlk/Modules/RecordView/RecordView.aspx?E=%e4%ba%a7%e4%b8%9a%e6%b4%bb%e5%8a%a8%e5%8d%95%e4%bd%8d%e8%a1%a8%e7%bb%b4%e6%8a%a4"
+        "http://10.42.31.167/tjmlk/Modules/RecordView/RecordView.aspx?E=%e4%ba%a7%e4%b8%9a%e6%b4%bb%e5%8a%a8%e5%8d%95%e4%bd%8d%e8%a1%a8%e7%bb%b4%e6%8a%a4",
       )
     ) {
       //在查询页面添加操作按钮
@@ -88,7 +88,7 @@
               if (resultSize == 1) {
                 //取出跳转链接
                 const jumpBtn = $(
-                  "#dbgData > tbody > tr:nth-child(2) > td:nth-child(2) > a:nth-child(1)"
+                  "#dbgData > tbody > tr:nth-child(2) > td:nth-child(2) > a:nth-child(1)",
                 );
 
                 //说明只有一条数据，点击第一条数据
@@ -101,7 +101,7 @@
                 alert(
                   "搜索结果共" +
                     (resultSize == -2 ? 0 : resultSize) +
-                    "条，请自行判断异常"
+                    "条，请自行判断异常",
                 );
               }
               //记录处理到哪个文件
@@ -137,7 +137,7 @@
         "http://10.42.31.167/tjmlk/Modules/RecordView/RecordView.aspx?E=%u6cd5%u4eba%u5355%u4f4d%u8868%u7ef4%u62a4",
         "http://10.42.31.167/tjmlk/Modules/RecordView/RecordView.aspx?E=%e6%b3%95%e4%ba%ba%e5%8d%95%e4%bd%8d%e8%a1%a8%e7%bb%b4%e6%8a%a4",
         "http://10.42.31.167/tjmlk/Modules/RecordView/RecordView.aspx?E=%u4ea7%u4e1a%u6d3b%u52a8%u5355%u4f4d%u8868%u7ef4%u62a4",
-        "http://10.42.31.167/tjmlk/Modules/RecordView/RecordView.aspx?E=%e4%ba%a7%e4%b8%9a%e6%b4%bb%e5%8a%a8%e5%8d%95%e4%bd%8d%e8%a1%a8%e7%bb%b4%e6%8a%a4"
+        "http://10.42.31.167/tjmlk/Modules/RecordView/RecordView.aspx?E=%e4%ba%a7%e4%b8%9a%e6%b4%bb%e5%8a%a8%e5%8d%95%e4%bd%8d%e8%a1%a8%e7%bb%b4%e6%8a%a4",
       )
     ) {
       //添加按钮
@@ -168,7 +168,11 @@
 
             //打印日志
             console.log(
-              "格式化数据\n[" + data.itemArr + "]\n共" + data.itemNum + "个数据"
+              "格式化数据\n[" +
+                data.itemArr +
+                "]\n共" +
+                data.itemNum +
+                "个数据",
             );
 
             //放入油猴存储中
@@ -229,7 +233,7 @@
       includeUrl(
         currentUrl,
         "http://10.42.31.167/tjmlk/Common/CustomBill.aspx?E=%e4%bf%ae%e6%94%b9%e6%b3%95%e4%ba%ba%e5%8d%95%e4%bd%8d%e8%a1%a8",
-        "http://10.42.31.167/tjmlk/Common/CustomBill.aspx?E=%e4%bf%ae%e6%94%b9%e4%ba%a7%e4%b8%9a%e6%b4%bb%e5%8a%a8%e5%8d%95%e4%bd%8d%e8%a1%a8"
+        "http://10.42.31.167/tjmlk/Common/CustomBill.aspx?E=%e4%bf%ae%e6%94%b9%e4%ba%a7%e4%b8%9a%e6%b4%bb%e5%8a%a8%e5%8d%95%e4%bd%8d%e8%a1%a8",
       )
     ) {
       //提取数据
@@ -245,7 +249,7 @@
           "03_行政区划代码_edt代码",
           areaCode,
           "031_单位注册区划_旧_edt代码",
-          areaCode
+          areaCode,
         );
 
         //设置颜色
@@ -253,7 +257,7 @@
           "red",
           "03_行政区划代码_旧_edt代码",
           "03_行政区划代码_edt代码",
-          "031_单位注册区划_旧_edt代码"
+          "031_单位注册区划_旧_edt代码",
         );
       } else if (
         document.querySelector("#tdTitle").innerHTML == "修改产业活动单位表"
@@ -262,14 +266,14 @@
           "03_行政区划代码_旧_edt代码",
           areaCode,
           "03_行政区划代码_edt代码",
-          areaCode
+          areaCode,
         );
 
         //设置颜色
         setColor(
           "red",
           "03_行政区划代码_旧_edt代码",
-          "03_行政区划代码_edt代码"
+          "03_行政区划代码_edt代码",
         );
       }
     }
