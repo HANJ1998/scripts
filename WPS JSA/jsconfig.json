@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+      "checkJs": true,
+      "allowJs": true,
+      "jsx": "react",
+      "esModuleInterop": true,
+      "strict": false,
+      "types": [],
+      "baseUrl": ".",
+      "paths": {
+        "*": ["./types/*", "."]
+      },
+      "target": "es2021" // 设置目标库为 ES2017
+    },
+    "include": ["**/*.js", "lib.et.d.ts", "lib.kso.d.ts", "lib.wps.d.ts"],
+    "exclude": ["node_modules"]
+}
