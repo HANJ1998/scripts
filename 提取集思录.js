@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         提取集思录
 // @namespace    https://github.com/hanj1998
-// @version      1.3
+// @version      1.4
 // @description  获取网页上的表格内容，并在新页面展示
 // @author       hanj1998@foxmail.com
 // @match        https://www.jisilu.cn/*
