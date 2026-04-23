@@ -19,33 +19,25 @@
 // 2. 使用本脚本即表示您已充分阅读、理解并同意本协议，自愿承担所有使用风险。
 // 3. 因违规使用、滥用或二次分发造成的一切法律责任与经济损失，均由使用者自行承担，作者不承担任何责任。
 
-/**
- * 生成激活码
- * @param {Date} date - 日期对象，默认为当前日期
- * @returns {string} 6位激活码
- */
-function generateActivationCode(date) {
-  const d = date || new Date();
-  const year = d.getFullYear();
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
-
-  // 种子值，用于生成激活码
-  const seed = 20241117;
-  // 生成基础数值：年月日拼接
-  const base = year * 10000 + month * 100 + day;
-  // 计算激活码：基础数值乘以种子值，取模1000000，补足6位
-  const code = ((base * seed) % 1000000).toString().padStart(6, "0");
-
-  return code;
-}
-
 (function () {
   "use strict";
   const VERSION = GM_info.script.version;
   const ACTIVATION_KEY = "kezhuanzhai_activation_code";
   const VALID_DAYS = 30;
   const WAIT_MINUTES = 5;
+
+  function generateActivationCode(date) {
+    const d = date || new Date();
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const day = d.getDate();
+
+    const seed = 20241117;
+    const base = year * 10000 + month * 100 + day;
+    const code = ((base * seed) % 1000000).toString().padStart(6, "0");
+
+    return code;
+  }
 
   /**
    * 获取存储的激活码
