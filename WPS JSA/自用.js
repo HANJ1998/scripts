@@ -43,7 +43,7 @@ function Workbook_AfterSave(Success) {
     targetSheet.Name = sheetName;
 
     // 固定头部信息
-    targetSheet.Cells(1, 1).Value2 = "作者：韩杰，邮箱：hanj1998@foxmail.com";
+    targetSheet.Cells(1, 1).Value2 = "BY:韩杰 || Email:hanj1998@foxmail.com";
     targetSheet.Cells(2, 1).Value2 = "保存时间";
     targetSheet.Cells(2, 2).Value2 = "说明";
     targetSheet.Cells(2, 3).Value2 = "操作人";
