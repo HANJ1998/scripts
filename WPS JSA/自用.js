@@ -2,22 +2,21 @@ function Workbook_AfterSave(Success) {
     const shtPwd = "HANJ";
     if (!Success) return;
 
+    let activeWin = ActiveWindow;
     Application.ScreenUpdating = false;
     Application.EnableEvents = false;
 
     const sheetName = "日志";
     let targetSheet = null;
     const shts = ThisWorkbook.Sheets;
-    const xlUp = -4162;
 
-    // 备注输入框
     let inputDesc = InputBox("本次保存备注（可不填）：", "保存日志备注", "");
-    if (inputDesc === null) inputDesc = "";
 
-    // 空白/空格直接退出，不修改任何内容，无脏标记
-    if (inputDesc.trim() === "") {
+    // 取消 / 空备注 → 直接退出，不做任何修改
+    if (inputDesc === null || inputDesc.trim() === "") {
         Application.ScreenUpdating = true;
         Application.EnableEvents = true;
+        activeWin.Activate();
         return;
     }
 
@@ -43,7 +42,7 @@ function Workbook_AfterSave(Success) {
     const userName = Application.UserName;
     const fileFullPath = ThisWorkbook.FullName;
 
-    // 初始化日志表
+    // 新建日志表（无激活、无选中、不抢焦点）
     if (!targetSheet) {
         targetSheet = shts.Add();
         targetSheet.Name = sheetName;
@@ -54,10 +53,11 @@ function Workbook_AfterSave(Success) {
         targetSheet.Cells(2, 3).Value2 = "操作人";
         targetSheet.Cells(2, 4).Value2 = "文件路径";
 
-        targetSheet.Activate();
-        ActiveWindow.FreezePanes = false;
-        targetSheet.Rows("3:3").Select();
-        ActiveWindow.FreezePanes = true;
+        let w = ThisWorkbook.Windows(1);
+        w.FreezePanes = false;
+        w.SplitRow = 2;
+        w.SplitColumn = 0;
+        w.FreezePanes = true;
 
         let headerRng = targetSheet.Range("A2:D2");
         headerRng.Font.Bold = true;
@@ -68,11 +68,12 @@ function Workbook_AfterSave(Success) {
         targetSheet.Protect(shtPwd, false, true, true);
     }
 
-    // 解锁写入
+    // 解锁写入日志
     if (targetSheet.ProtectContents) {
         targetSheet.Unprotect(shtPwd);
     }
 
+    const xlUp = -4162;
     const lastRow = targetSheet.Cells(targetSheet.Rows.Count, 1).End(xlUp).Row;
     const writeRow = lastRow < 3 ? 3 : lastRow + 1;
 
@@ -83,16 +84,19 @@ function Workbook_AfterSave(Success) {
     targetSheet.Range(`A${writeRow}:D${writeRow}`).HorizontalAlignment = -4131;
     targetSheet.Range("A:D").Columns.AutoFit();
 
-    // 重新上锁
     targetSheet.Protect(shtPwd, false, true, true);
 
-    // ========== 安全消除未保存星号（只在写入日志后执行） ==========
-    // AfterSave 事件内二次修改内容，合法抹平脏标记，日志永久写入文件
-    ThisWorkbook.Saved = true;
+    // ========== 关键：写完日志 静默二次保存，永久落地不丢失 ==========
+    ThisWorkbook.Save();
 
+    // 恢复前台、焦点锁定
     Application.ScreenUpdating = true;
     Application.EnableEvents = true;
-}function 名称批量_导出导入() {
+    activeWin.Activate();
+}
+}
+
+function 名称批量_导出导入() {
   Application.ScreenUpdating = false;
   Application.EnableEvents = false;
 
