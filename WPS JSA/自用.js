@@ -1,99 +1,99 @@
-function Workbook_AfterSave(Success) {
-    const shtPwd = "HANJ";
-    if (!Success) return;
+function Workbook_BeforeSave(SaveAsUI, Cancel) {
+  // 工作表保护密码
+  const shtPwd = "HANJ";
 
-    let activeWin = ActiveWindow;
-    Application.ScreenUpdating = false;
-    Application.EnableEvents = false;
+  // 只处理【正常保存】，跳过【另存为】
+  if (SaveAsUI) return;
 
-    const sheetName = "日志";
-    let targetSheet = null;
-    const shts = ThisWorkbook.Sheets;
+  Application.ScreenUpdating = false;
+  Application.EnableEvents = false;
 
-    let inputDesc = InputBox("本次保存备注（可不填）：", "保存日志备注", "");
+  const sheetName = "日志";
+  let targetSheet = null;
+  const shts = ThisWorkbook.Sheets;
+  const xlUp = -4162;
 
-    // 取消 / 空备注 → 直接退出，不做任何修改
-    if (inputDesc === null || inputDesc.trim() === "") {
-        Application.ScreenUpdating = true;
-        Application.EnableEvents = true;
-        activeWin.Activate();
-        return;
+  // 弹出可选备注输入框
+  let inputDesc = InputBox("本次保存备注（可不填）：", "保存日志备注", "");
+
+  // 查找日志工作表
+  for (let i = 1; i <= shts.Count; i++) {
+    let s = shts(i);
+    if (s.Name === sheetName) {
+      targetSheet = s;
+      break;
     }
+  }
 
-    // 查找日志表
-    for (let i = 1; i <= shts.Count; i++) {
-        let s = shts(i);
-        if (s.Name === sheetName) {
-            targetSheet = s;
-            break;
-        }
-    }
+  // 时间格式化 YYYYMMDD HH-MM-SS
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = (now.getMonth() + 1).toString().padStart(2, "0");
+  const d = now.getDate().toString().padStart(2, "0");
+  const h = now.getHours().toString().padStart(2, "0");
+  const mi = now.getMinutes().toString().padStart(2, "0");
+  const ss = now.getSeconds().toString().padStart(2, "0");
+  const saveTimeText = `${y}${m}${d} ${h}-${mi}-${ss}`;
 
-    // 时间
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = (now.getMonth() + 1).toString().padStart(2, "0");
-    const d = now.getDate().toString().padStart(2, "0");
-    const h = now.getHours().toString().padStart(2, "0");
-    const mi = now.getMinutes().toString().padStart(2, "0");
-    const ss = now.getSeconds().toString().padStart(2, "0");
-    const saveTimeText = `${y}${m}${d} ${h}-${mi}-${ss}`;
+  const userName = Application.UserName;
+  const fileFullPath = ThisWorkbook.FullName;
 
-    const userName = Application.UserName;
-    const fileFullPath = ThisWorkbook.FullName;
+  // 新建日志表初始化
+  if (!targetSheet) {
+    targetSheet = shts.Add();
+    targetSheet.Name = sheetName;
 
-    // 新建日志表（无激活、无选中、不抢焦点）
-    if (!targetSheet) {
-        targetSheet = shts.Add();
-        targetSheet.Name = sheetName;
+    // 固定头部信息
+    targetSheet.Cells(1, 1).Value2 = "BY:韩杰 || Email:hanj1998@foxmail.com";
+    targetSheet.Cells(2, 1).Value2 = "保存时间";
+    targetSheet.Cells(2, 2).Value2 = "说明";
+    targetSheet.Cells(2, 3).Value2 = "操作人";
+    targetSheet.Cells(2, 4).Value2 = "文件路径";
 
-        targetSheet.Cells(1, 1).Value2 = "BY:韩杰 || Email:hanj1998@foxmail.com";
-        targetSheet.Cells(2, 1).Value2 = "保存时间";
-        targetSheet.Cells(2, 2).Value2 = "说明";
-        targetSheet.Cells(2, 3).Value2 = "操作人";
-        targetSheet.Cells(2, 4).Value2 = "文件路径";
+    // 冻结前两行
+    targetSheet.Activate();
+    ActiveWindow.FreezePanes = false;
+    targetSheet.Rows("3:3").Select();
+    ActiveWindow.FreezePanes = true;
 
-        let w = ThisWorkbook.Windows(1);
-        w.FreezePanes = false;
-        w.SplitRow = 2;
-        w.SplitColumn = 0;
-        w.FreezePanes = true;
+    // 表头样式
+    let headerRng = targetSheet.Range("A2:D2");
+    headerRng.Font.Bold = true;
+    headerRng.Interior.Color = 14277081;
 
-        let headerRng = targetSheet.Range("A2:D2");
-        headerRng.Font.Bold = true;
-        headerRng.Interior.Color = 14277081;
+    // 锁定设置：1-2行保护，下方可编辑
+    targetSheet.Range("A:D").Locked = false;
+    targetSheet.Rows("1:2").Locked = true;
 
-        targetSheet.Range("A:D").Locked = false;
-        targetSheet.Rows("1:2").Locked = true;
-        targetSheet.Protect(shtPwd, false, true, true);
-    }
-
-    // 解锁写入日志
-    if (targetSheet.ProtectContents) {
-        targetSheet.Unprotect(shtPwd);
-    }
-
-    const xlUp = -4162;
-    const lastRow = targetSheet.Cells(targetSheet.Rows.Count, 1).End(xlUp).Row;
-    const writeRow = lastRow < 3 ? 3 : lastRow + 1;
-
-    targetSheet.Cells(writeRow, 1).Value2 = saveTimeText;
-    targetSheet.Cells(writeRow, 2).Value2 = inputDesc;
-    targetSheet.Cells(writeRow, 3).Value2 = userName;
-    targetSheet.Cells(writeRow, 4).Value2 = fileFullPath;
-    targetSheet.Range(`A${writeRow}:D${writeRow}`).HorizontalAlignment = -4131;
-    targetSheet.Range("A:D").Columns.AutoFit();
-
+    // 工作表保护
     targetSheet.Protect(shtPwd, false, true, true);
+  }
 
-    // ========== 关键：写完日志 静默二次保存，永久落地不丢失 ==========
-    ThisWorkbook.Save();
+  // 解除保护写入数据
+  if (targetSheet.ProtectContents) {
+    targetSheet.Unprotect(shtPwd);
+  }
 
-    // 恢复前台、焦点锁定
-    Application.ScreenUpdating = true;
-    Application.EnableEvents = true;
-    activeWin.Activate();
-}
+  // 获取最后一行，追加日志
+  const lastRow = targetSheet.Cells(targetSheet.Rows.Count, 1).End(xlUp).Row;
+  const writeRow = lastRow < 3 ? 3 : lastRow + 1;
+
+  targetSheet.Cells(writeRow, 1).Value2 = saveTimeText;
+  targetSheet.Cells(writeRow, 2).Value2 = inputDesc;
+  targetSheet.Cells(writeRow, 3).Value2 = userName;
+  targetSheet.Cells(writeRow, 4).Value2 = fileFullPath;
+  targetSheet.Range(`A${writeRow}:D${writeRow}`).HorizontalAlignment = -4131;
+
+  // 自动调整列宽
+  targetSheet.Range("A:D").Columns.AutoFit();
+
+  // 重新加密保护
+  targetSheet.Protect(shtPwd, false, true, true);
+
+  // 【关键】绝对不要加 ThisWorkbook.Saved = true
+
+  Application.ScreenUpdating = true;
+  Application.EnableEvents = true;
 }
 
 function 名称批量_导出导入() {
