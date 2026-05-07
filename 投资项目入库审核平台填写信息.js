@@ -1,32 +1,36 @@
 // ==UserScript==
 // @name         投资项目入库审核平台填写信息
 // @namespace    https://github.com/hanj1998
-// @version      0.2
+// @version      0.3
 // @description  自动填写区县现场核实人及时间
 // @author       hanj1998@foxmail.com
 // @match        *://10.42.181.70/*
 // @grant        none
+// @require      https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js
 // @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/投资项目入库审核平台填写信息.js
 // @downloadURL  https://raw.githubusercontent.com/hanj1998/MyScript/main/投资项目入库审核平台填写信息.js
 // ==/UserScript==
 
-(function () {
+(async function () {
   "use strict";
 
   console.log("脚本加载");
 
-  // 加载xlsx库
-  const script = document.createElement("script");
-  script.src = "https://cdn.staticfile.net/xlsx/0.18.5/xlsx.full.min.js";
-  script.onload = () => {
-    console.log("xlsx库加载完成");
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", init);
-    } else {
-      init();
-    }
-  };
-  document.head.appendChild(script);
+  if (typeof XLSX === "undefined") {
+    console.log("等待 XLSX 库加载...");
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  if (typeof XLSX === "undefined") {
+    console.error("XLSX 库未加载，请检查 @require URL");
+    return;
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 
   // 初始化脚本 UI：创建按钮和隐藏文件输入框
   function init() {
