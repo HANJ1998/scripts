@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         投资项目入库审核平台填写信息
 // @namespace    https://github.com/hanj1998
-// @version      0.4
-// @description  自动填写区县现场核实人及时间
+// @version      1.0
+// @description  自动填写区县/地市现场核实人及时间
 // @author       hanj1998@foxmail.com
 // @match        *://10.42.181.70/*
 // @grant        none
@@ -14,25 +14,50 @@
 (async function () {
   "use strict";
 
-  if (typeof XLSX === "undefined") {
+  const FILE_ACCEPT = ".xlsx";
+  const PRIMARY_HEADER = "项目代码";
+  const ROW_SELECTOR =
+    "#app > div > div > main > div:nth-child(2) > div > div > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(1) > div tr";
+  const PROJECT_CODE_COLUMN = 2; // 项目代码 td[3]
+
+  const FIELD_CONFIGS = [
+    { header: "区县现场核实人", pageIndex: 62 }, // td[63]
+    { header: "区县现场核实时间", pageIndex: 63 }, // td[64]
+    { header: "地市现场核实人", pageIndex: 64 }, // td[65]
+    { header: "地市现场核实时间", pageIndex: 65 }, // td[66]
+  ];
+
+  const DEBUG = true;
+  function logDebug(...args) {
+    if (DEBUG) {
+      console.log("[调试]", ...args);
+    }
+  }
+
+  await ensureXlsxLoaded();
+  attachInitListener();
+
+  function attachInitListener() {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  }
+
+  async function ensureXlsxLoaded() {
+    if (typeof XLSX !== "undefined") {
+      return;
+    }
     console.log("等待 XLSX 库加载...");
     await new Promise((resolve) => setTimeout(resolve, 500));
+    if (typeof XLSX === "undefined") {
+      console.error("XLSX 库未加载，请检查 @require URL");
+      throw new Error("XLSX 未加载");
+    }
   }
 
-  if (typeof XLSX === "undefined") {
-    console.error("XLSX 库未加载，请检查 @require URL");
-    return;
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-
-  // 初始化脚本 UI：创建按钮和隐藏文件输入框
   function init() {
-    // 添加按钮和隐藏文件输入
     const container = document.createElement("div");
     container.style.position = "fixed";
     container.style.top = "10px";
@@ -42,145 +67,235 @@
     container.style.border = "1px solid black";
     container.style.padding = "10px";
 
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = ".xlsx";
-    fileInput.style.display = "none";
-    fileInput.onchange = () => {
-      if (fileInput.files.length > 0) {
-        processFile(fileInput.files[0]);
-      }
-    };
-
-    const button = document.createElement("button");
-    button.textContent = "填表";
-    button.onclick = () => fileInput.click();
+    const fileInput = createFileInput();
+    const button = createButton("填表", () => {
+      fileInput.value = "";
+      fileInput.click();
+    });
 
     container.appendChild(button);
     container.appendChild(fileInput);
     document.body.appendChild(container);
   }
 
+  function createFileInput() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = FILE_ACCEPT;
+    input.style.display = "none";
+    input.addEventListener("change", () => {
+      if (input.files && input.files.length > 0) {
+        processFile(input.files[0]);
+      }
+    });
+    return input;
+  }
+
+  function createButton(label, onClick) {
+    const button = document.createElement("button");
+    button.textContent = label;
+    button.addEventListener("click", onClick);
+    return button;
+  }
+
   async function processFile(file) {
     console.log("开始处理文件");
+    logDebug("processFile 开始", {
+      fileName: file?.name,
+      fileSize: file?.size,
+      fileType: file?.type,
+    });
     if (!file) {
       alert("请选择xlsx文件");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = async function (e) {
-      console.log("文件读取完成，解析ing");
-      // 将读取到的二进制数据解析为 XLSX 工作簿对象
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    const workbook = await readWorkbook(file);
+    logDebug("加载成功，工作簿名称", workbook.SheetNames);
+    const jsonData = readSheetAsJson(workbook);
+    logDebug("解析后行数", jsonData.length);
 
-      console.log("解析完毕，文件内容：", jsonData);
+    if (!Array.isArray(jsonData) || jsonData.length < 2) {
+      alert("文件内容不正确，请检查xlsx格式");
+      return;
+    }
 
-      // 第一行是表头，数据从第二行开始
-      const headers = jsonData[0];
-      const dataRows = jsonData.slice(1);
+    const headers = Array.isArray(jsonData[0]) ? jsonData[0] : [];
+    const dataRows = jsonData.slice(1);
+    const headerMap = buildHeaderMap(headers);
+    logDebug("文件表头", headers);
+    logDebug("表头映射", headerMap);
 
-      // 找到 Excel 中目标列的索引位置，用于读取每行对应字段
-      const codeIndex = headers.indexOf("项目代码");
-      const personIndex = headers.indexOf("区县现场核实人");
-      const timeIndex = headers.indexOf("区县现场核实时间");
+    const projectCodeIndex = headerMap[PRIMARY_HEADER];
+    const activeFields = FIELD_CONFIGS.map((field) => ({
+      ...field,
+      sourceIndex: headerMap[field.header],
+    })).filter((field) => field.sourceIndex !== undefined);
+    logDebug(
+      "激活字段",
+      activeFields.map((field) => field.header),
+    );
 
-      console.log(
-        "文件列号 项目代码：",
-        codeIndex + 1,
-        "区县现场核实人：",
-        personIndex + 1,
-        "区县现场核实时间：",
-        timeIndex + 1,
+    if (projectCodeIndex === undefined || activeFields.length === 0) {
+      alert(
+        `文件格式不正确，表头应包含：${PRIMARY_HEADER}，以及至少一个数据列：${FIELD_CONFIGS.map(
+          (field) => field.header,
+        ).join("、")}`,
       );
+      return;
+    }
 
-      if (codeIndex === -1 || personIndex === -1 || timeIndex === -1) {
-        alert(
-          "文件格式不正确，表头应为:项目代码;区县现场核实人;区县现场核实时间",
-        );
-        return;
+    const rows = queryDataRows();
+    logDebug("查询页面数据行数", rows.length);
+    if (rows.length === 0) {
+      alert("未找到任何数据行，请检查页面结构");
+      return;
+    }
+
+    console.log("页面总数据行数：", rows.length);
+    console.log(
+      "激活指标：",
+      activeFields.map((field) => field.header),
+    );
+
+    const matchedPageCodes = new Set();
+
+    for (const row of dataRows) {
+      const code = normalizeValue(row[projectCodeIndex]);
+      if (!code) {
+        continue;
       }
 
-      // 直接硬编码查找 tr 行，跳过 table 节点，按页面结构提取数据行
-      const allRows = document.querySelectorAll(
-        "#app > div > div > main > div:nth-child(2) > div > div > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(1) > div tr",
-      );
-      const rows = Array.from(allRows).filter((tr) => tr.querySelector("td"));
-
-      // rows 数组只保留包含 td 的数据行，排除表头和空行
-      if (rows.length === 0) {
-        alert("未找到待填充的行，请检查页面结构");
-        return;
+      console.log("正在处理项目代码：", code);
+      const targetRow = findRowByProjectCode(rows, code);
+      if (!targetRow) {
+        console.log("未找到对应页面行，跳过项目代码：", code);
+        continue;
       }
 
-      // 硬编码列索引
-      const codeColIndex = 2; // 项目代码 td[3]
-      const personColIndex = 62; // 区县现场核实人 td[63]
-      const timeColIndex = 63; // 区县现场核实时间 td[64]
+      matchedPageCodes.add(code);
+      const cells = targetRow.querySelectorAll("td");
+      await fillRow(cells, row, activeFields);
+      await sleep(500);
+    }
 
-      console.log(
-        "网页列号 项目代码：",
-        codeColIndex,
-        "区县现场核实人：",
-        personColIndex,
-        "区县现场核实时间：",
-        timeColIndex,
-      );
-
-      console.log("当前页面预备填充行数：", rows.length);
-
-      // 遍历xlsx数据，按项目代码查找页面对应行并填写字段
-      for (const row of dataRows) {
-        const code = row[codeIndex];
-        const person = row[personIndex];
-        const time = row[timeIndex];
-
-        // 在页面表格行中匹配项目代码列，找到匹配后的行进行填写
-        for (const tr of rows) {
-          const cells = tr.querySelectorAll("td");
-          if (
-            cells.length > codeColIndex &&
-            cells[codeColIndex].textContent.trim() === code.toString().trim()
-          ) {
-            // 填写核实人
-            const personCell = cells[personColIndex];
-            await fillEditableCell(personCell, person);
-
-            // 填写时间
-            const timeCell = cells[timeColIndex];
-            await fillEditableCell(timeCell, time);
-
-            console.log("写入：", code, person, time);
-
-            // 等待页面保存完成再继续下一行
-            await sleep(500);
-            break;
-          }
-        }
-      }
-
-      console.log("填写完成");
-      alert("填写完成");
-    };
-    reader.readAsArrayBuffer(file);
+    console.log("页面中匹配到文件的行数：", matchedPageCodes.size);
+    console.log("填写完成");
+    alert("填写完成");
   }
 
-  // 休眠辅助函数：等待指定毫秒数，用于页面操作间隔
+  async function readWorkbook(file) {
+    const data = await readFileAsArrayBuffer(file);
+    return XLSX.read(data, { type: "array" });
+  }
+
+  function readFileAsArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function readSheetAsJson(workbook) {
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    return XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  }
+
+  function buildHeaderMap(headers) {
+    return headers.reduce((map, header, index) => {
+      if (header !== undefined && header !== null) {
+        map[String(header).trim()] = index;
+      }
+      return map;
+    }, {});
+  }
+
+  function queryDataRows() {
+    const allRows = document.querySelectorAll(ROW_SELECTOR);
+    return Array.from(allRows).filter((tr) => tr.querySelector("td"));
+  }
+
+  function findRowByProjectCode(rows, code) {
+    return rows.find((tr) => {
+      const cells = tr.querySelectorAll("td");
+      return (
+        cells.length > PROJECT_CODE_COLUMN &&
+        normalizeValue(cells[PROJECT_CODE_COLUMN].textContent) === code
+      );
+    });
+  }
+
+  async function fillRow(cells, dataRow, fields) {
+    for (const field of fields) {
+      await writeFieldIfNeeded(cells, field, dataRow[field.sourceIndex]);
+    }
+  }
+
+  async function writeFieldIfNeeded(cells, field, value) {
+    if (!field) {
+      logDebug("跳过写入：字段配置不存在", field);
+      return false;
+    }
+    if (value === undefined || value === null) {
+      logDebug("跳过写入：值为空", field.header);
+      return false;
+    }
+
+    const cell = cells[field.pageIndex];
+    if (!cell) {
+      logDebug("跳过写入：目标单元格缺失", {
+        header: field.header,
+        pageIndex: field.pageIndex,
+      });
+      return false;
+    }
+
+    const newValue = normalizeValue(value);
+    if (!newValue) {
+      logDebug("跳过写入：新值为空字符串", {
+        header: field.header,
+        value,
+      });
+      return false;
+    }
+
+    const existingValue = normalizeValue(cell.textContent);
+    if (existingValue === newValue) {
+      logDebug("跳过写入：已有内容相同", {
+        header: field.header,
+        existingValue,
+        newValue,
+      });
+      return false;
+    }
+
+    logDebug("开始写入字段", {
+      header: field.header,
+      pageIndex: field.pageIndex,
+      existingValue,
+      newValue,
+    });
+    return fillEditableCell(cell, newValue);
+  }
+
+  function normalizeValue(value) {
+    return value === undefined || value === null ? "" : String(value).trim();
+  }
+
   function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  // 等待输入框生成：在可编辑单元格中监听 input 元素出现
   function waitForInput(cell, timeout = 3000) {
     return new Promise((resolve) => {
       const check = () => {
         const input = cell.querySelector("input");
         if (input) {
-          return resolve(input);
+          resolve(input);
+          return true;
         }
         return false;
       };
@@ -195,6 +310,7 @@
           clearTimeout(timer);
         }
       });
+
       observer.observe(cell, {
         childList: true,
         subtree: true,
@@ -208,13 +324,11 @@
     });
   }
 
-  // 填写单元格内容：支持可编辑触发、输入框、以及普通文本替换
   async function fillEditableCell(cell, value) {
     if (!cell) {
       return false;
     }
 
-    // 优先尝试通过可编辑触发器进入编辑模式
     const trigger = cell.querySelector(".table-edit-cell-trigger");
     if (trigger) {
       trigger.click();
@@ -232,7 +346,6 @@
       }
     }
 
-    // 如果没有输入框，则尝试直接替换显示文本节点
     const span = cell.querySelector("span.n-ellipsis span");
     if (span) {
       span.textContent = value;
@@ -240,7 +353,6 @@
       return false;
     }
 
-    // 如果 td 已有内容，先清空再写入新值
     while (cell.firstChild) {
       cell.removeChild(cell.firstChild);
     }
