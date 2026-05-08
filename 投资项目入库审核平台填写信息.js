@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         投资项目入库审核平台填写信息
 // @namespace    https://github.com/hanj1998
-// @version      0.3
+// @version      0.4
 // @description  自动填写区县现场核实人及时间
 // @author       hanj1998@foxmail.com
 // @match        *://10.42.181.70/*
@@ -13,8 +13,6 @@
 
 (async function () {
   "use strict";
-
-  console.log("脚本加载");
 
   if (typeof XLSX === "undefined") {
     console.log("等待 XLSX 库加载...");
@@ -34,8 +32,6 @@
 
   // 初始化脚本 UI：创建按钮和隐藏文件输入框
   function init() {
-    console.log("初始化UI");
-
     // 添加按钮和隐藏文件输入
     const container = document.createElement("div");
     container.style.position = "fixed";
@@ -63,8 +59,6 @@
     container.appendChild(button);
     container.appendChild(fileInput);
     document.body.appendChild(container);
-
-    console.log("UI元素已添加到页面");
   }
 
   async function processFile(file) {
@@ -76,13 +70,15 @@
 
     const reader = new FileReader();
     reader.onload = async function (e) {
-      console.log("文件读取完成，解析xlsx");
+      console.log("文件读取完成，解析ing");
       // 将读取到的二进制数据解析为 XLSX 工作簿对象
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: "array" });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      console.log("解析完毕，文件内容：", jsonData);
 
       // 第一行是表头，数据从第二行开始
       const headers = jsonData[0];
@@ -93,10 +89,19 @@
       const personIndex = headers.indexOf("区县现场核实人");
       const timeIndex = headers.indexOf("区县现场核实时间");
 
-      console.log("列索引：", codeIndex, personIndex, timeIndex);
+      console.log(
+        "文件列号 项目代码：",
+        codeIndex + 1,
+        "区县现场核实人：",
+        personIndex + 1,
+        "区县现场核实时间：",
+        timeIndex + 1,
+      );
 
       if (codeIndex === -1 || personIndex === -1 || timeIndex === -1) {
-        alert("xlsx文件格式不正确，缺少必要列");
+        alert(
+          "文件格式不正确，表头应为:项目代码;区县现场核实人;区县现场核实时间",
+        );
         return;
       }
 
@@ -108,7 +113,7 @@
 
       // rows 数组只保留包含 td 的数据行，排除表头和空行
       if (rows.length === 0) {
-        alert("未找到数据行，请检查页面结构");
+        alert("未找到待填充的行，请检查页面结构");
         return;
       }
 
@@ -118,23 +123,21 @@
       const timeColIndex = 63; // 区县现场核实时间 td[64]
 
       console.log(
-        "列索引：项目代码",
+        "网页列号 项目代码：",
         codeColIndex,
-        "核实人",
+        "区县现场核实人：",
         personColIndex,
-        "时间",
+        "区县现场核实时间：",
         timeColIndex,
       );
 
-      console.log("找到数据行数量：", rows.length);
+      console.log("当前页面预备填充行数：", rows.length);
 
       // 遍历xlsx数据，按项目代码查找页面对应行并填写字段
       for (const row of dataRows) {
         const code = row[codeIndex];
         const person = row[personIndex];
         const time = row[timeIndex];
-
-        console.log("处理项目代码：", code);
 
         // 在页面表格行中匹配项目代码列，找到匹配后的行进行填写
         for (const tr of rows) {
@@ -143,7 +146,6 @@
             cells.length > codeColIndex &&
             cells[codeColIndex].textContent.trim() === code.toString().trim()
           ) {
-            console.log("找到匹配行，填写数据");
             // 填写核实人
             const personCell = cells[personColIndex];
             await fillEditableCell(personCell, person);
@@ -151,6 +153,8 @@
             // 填写时间
             const timeCell = cells[timeColIndex];
             await fillEditableCell(timeCell, time);
+
+            console.log("写入：", code, person, time);
 
             // 等待页面保存完成再继续下一行
             await sleep(500);
@@ -218,6 +222,7 @@
       const input = await waitForInput(cell, 3000);
       if (input) {
         input.focus();
+        input.value = "";
         input.value = value;
         input.dispatchEvent(new Event("input", { bubbles: true }));
         input.dispatchEvent(new Event("change", { bubbles: true }));
@@ -235,7 +240,10 @@
       return false;
     }
 
-    // 最后退化到直接设置单元格文本内容
+    // 如果 td 已有内容，先清空再写入新值
+    while (cell.firstChild) {
+      cell.removeChild(cell.firstChild);
+    }
     cell.textContent = value;
     await sleep(2000);
     return false;
