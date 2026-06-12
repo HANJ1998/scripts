@@ -5,8 +5,8 @@
 // @description  贸易问题专版 - 自动处理主要业务活动
 // @author       GOD
 // @match        *://tjymlk.stats.gov.cn/*
-// @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/MLK贸易问题.js
-// @downloadURL  https://raw.githubusercontent.com/hanj1998/MyScript/main/MLK贸易问题.js
+// @updateURL    https://raw.githubusercontent.com/HANJ1998/scripts/main/MLK贸易问题.js
+// @downloadURL  https://raw.githubusercontent.com/HANJ1998/scripts/main/MLK贸易问题.js
 // @license      MIT
 
 // ==/UserScript==

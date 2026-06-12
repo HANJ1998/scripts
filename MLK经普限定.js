@@ -4,8 +4,8 @@
 // @version      1.1.1
 // @description  经济普查是真的累！！！
 // @author       hanj-cn@qq.com
-// @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/MLK经普限定.js
-// @downloadURL  https://raw.githubusercontent.com/hanj1998/MyScript/main/MLK经普限定.js
+// @updateURL    https://raw.githubusercontent.com/HANJ1998/scripts/main/MLK经普限定.js
+// @downloadURL  https://raw.githubusercontent.com/HANJ1998/scripts/main/MLK经普限定.js
 // @grant        unsafeWindow
 // @grant        GM_setValue
 // @grant        GM_getValue

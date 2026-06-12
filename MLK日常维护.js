@@ -3,8 +3,8 @@
 // @namespace    https://github.com/hanj1998
 // @version      4.4
 // @description  全自动改错
-// @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/MLK日常维护.js
-// @downloadURL  https://raw.githubusercontent.com/hanj1998/MyScript/main/MLK日常维护.js
+// @updateURL    https://raw.githubusercontent.com/HANJ1998/scripts/main/MLK日常维护.js
+// @downloadURL  https://raw.githubusercontent.com/HANJ1998/scripts/main/MLK日常维护.js
 // @author       GOD
 // @match        *://tjymlk.stats.gov.cn/*
 // @grant        GM_xmlhttpRequest
