@@ -9,8 +9,8 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @require      https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js
-// @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/网页表格导出.js
-// @downloadURL  https://raw.githubusercontent.com/hanj1998/MyScript/main/网页表格导出.js
+// @updateURL    https://raw.githubusercontent.com/HANJ1998/scripts/main/网页表格导出.js
+// @downloadURL  https://raw.githubusercontent.com/HANJ1998/scripts/main/网页表格导出.js
 // @license      MIT
 
 // ==/UserScript==

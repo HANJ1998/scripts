@@ -2,8 +2,8 @@
 // @name         CSDN一键点赞收藏加评论
 // @namespace    https://github.com/hanj1998
 // @version      1.2
-// @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/CSDN一键三连.js
-// @downloadURL  https://raw.githubusercontent.com/hanj1998/MyScript/main/CSDN一键三连.js
+// @updateURL    https://raw.githubusercontent.com/HANJ1998/scripts/main/CSDN一键三连.js
+// @downloadURL  https://raw.githubusercontent.com/HANJ1998/scripts/main/CSDN一键三连.js
 // @description  收藏好文章的同时用评论感谢和鼓励作者
 // @author       hanj1998@foxmail.com
 // @match        *://blog.csdn.net/*/article/details/*

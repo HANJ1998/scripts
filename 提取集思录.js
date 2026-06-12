@@ -9,8 +9,8 @@
 // @grant        GM_getValue
 // @grant        GM_xmlhttpRequest
 // @connect      www.jisilu.cn
-// @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/提取集思录.js
-// @downloadURL  https://raw.githubusercontent.com/hanj1998/MyScript/main/提取集思录.js
+// @updateURL    https://raw.githubusercontent.com/HANJ1998/scripts/main/提取集思录.js
+// @downloadURL  https://raw.githubusercontent.com/HANJ1998/scripts/main/提取集思录.js
 // @license      MIT
 // ==/UserScript==
 

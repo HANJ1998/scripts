@@ -7,8 +7,8 @@
 // @match        *://10.42.181.70/*
 // @grant        none
 // @require      https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js
-// @updateURL    https://raw.githubusercontent.com/hanj1998/MyScript/main/投资项目入库审核平台填写信息.js
-// @downloadURL  https://raw.githubusercontent.com/hanj1998/MyScript/main/投资项目入库审核平台填写信息.js
+// @updateURL    https://raw.githubusercontent.com/HANJ1998/scripts/main/投资项目入库审核平台填写信息.js
+// @downloadURL  https://raw.githubusercontent.com/HANJ1998/scripts/main/投资项目入库审核平台填写信息.js
 // ==/UserScript==
 
 (async function () {
