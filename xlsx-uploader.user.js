@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         XLSX 上传读取器
+// @name         投资项目一键填写
 // @namespace    https://workbuddy.local/xlsx-uploader
 // @version      1.4.3
-// @description  自动从 xlsx 文件读取数据，填入 thtf-spreadsheet 填报表
+// @description  自动填写投资项目入库审核平台数据，导出A类错误
 // @match        http://10.42.31.22:7443/stat/collect/InputOrganForm*
 // @grant        none
 // @require      https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js
