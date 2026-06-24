@@ -10,8 +10,8 @@
 // @grant        GM_xmlhttpRequest
 // @grant        GM_registerMenuCommand
 // @require      https://code.jquery.com/jquery-3.6.0.min.js
-// @updateURL    https://raw.githubusercontent.com/HANJ1998/scripts/main/自动登陆统计云.js
-// @downloadURL  https://raw.githubusercontent.com/HANJ1998/scripts/main/自动登陆统计云.js
+// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/自动登陆统计云.js
+// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/自动登陆统计云.js
 // @license      MIT
 // ==/UserScript==
 

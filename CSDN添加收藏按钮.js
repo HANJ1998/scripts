@@ -7,8 +7,8 @@
 // @match        *://*.csdn.net/*
 // @icon         https://favicon.yandex.net/favicon/v2/https://www.csdn.net/?size=32
 // @grant        none
-// @updateURL    https://raw.githubusercontent.com/HANJ1998/scripts/main/CSDN添加收藏按钮.js
-// @downloadURL  https://raw.githubusercontent.com/HANJ1998/scripts/main/CSDN添加收藏按钮.js
+// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/CSDN添加收藏按钮.js
+// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/CSDN添加收藏按钮.js
 // @license      MIT
 // ==/UserScript==
 
