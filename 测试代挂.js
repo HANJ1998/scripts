@@ -7,8 +7,8 @@
 // @match        http://47.101.208.143:8848/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=208.143
 // @grant        none
-// @updateURL    https://raw.githubusercontent.com/HANJ1998/scripts/main/测试代挂.js
-// @downloadURL  https://raw.githubusercontent.com/HANJ1998/scripts/main/测试代挂.js
+// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/测试代挂.js
+// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/测试代挂.js
 // @license      MIT
 // ==/UserScript==
 

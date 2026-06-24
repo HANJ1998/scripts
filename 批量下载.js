@@ -7,8 +7,8 @@
 // @match        https://ycszx.sc.yichang.gov.cn/yczxplus/modules/suggestion-manager
 // @match        https://lzpt.ycsrd.gov.cn/npc/modules/suggestion-manager
 // @grant        GM_xmlhttpRequest
-// @updateURL    https://raw.githubusercontent.com/HANJ1998/scripts/main/批量下载.js
-// @downloadURL  https://raw.githubusercontent.com/HANJ1998/scripts/main/批量下载.js
+// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/批量下载.js
+// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/批量下载.js
 // @license      MIT
 // ==/UserScript==
 
