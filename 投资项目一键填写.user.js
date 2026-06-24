@@ -7,8 +7,8 @@
 // @grant        none
 // @require      https://cdn.staticfile.net/xlsx/0.18.5/xlsx.full.min.js
 // @run-at       document-idle
-// @updateURL    https://raw.githubusercontent.com/HANJ1998/scripts/main/xlsx-uploader.user.js
-// @downloadURL  https://raw.githubusercontent.com/HANJ1998/scripts/main/xlsx-uploader.user.js
+// @updateURL    https://cdn.jsdelivr.net/gh/HANJ1998/scripts@main/投资项目一键填写.user.js
+// @downloadURL  https://cdn.jsdelivr.net/gh/HANJ1998/scripts@main/投资项目一键填写.user.js
 // ==/UserScript==
 
 (function () {
