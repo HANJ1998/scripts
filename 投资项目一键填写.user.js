@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         投资项目一键填写
 // @namespace    https://workbuddy.local/投资项目一键填写
-// @version      1.8
+// @version      1.9
 // @description  自动填写投资项目入库审核平台数据，记录和导出审核错误
 // @match        http://10.42.31.22:7443/stat/collect/InputOrganForm*
 // @grant        none
@@ -236,18 +236,12 @@
         });
     }
 
-    /** 初始化页面：设置每页1000条 → 筛选不通过 */
+    /** 初始化页面：设置每页1000条 */
     async function initPage() {
         toast("初始化：设置每页1000条...");
         await selectDropdownNth(
             '//*[@class="el-pagination__sizes"]//div/div/input',
             7
-        );
-        await new Promise(r => setTimeout(r, 500));
-        toast("初始化：筛选不通过...");
-        await selectDropdownNth(
-            '//*[@class="el-form table-left-content-from"]//div[3]/div/div/div/div/input',
-            6
         );
         toast("初始化完成");
     }
@@ -273,11 +267,9 @@
     }
 
     // ============================================================
-    // "下一个不通过" 按钮
+    // "下一条" — 按表格顺序逐行走，不挑状态
     //
-    // 在项目列表中找到"验收不通过"的行，逐个点击进入填报页。
-    // 每次从上次点击的下一行开始找，实现"逐行处理"。
-    //
+    // 每次从上次点击的下一行开始，点击进入填报页。
     // 如果当前在填报页（有 __ssInstance__），先读取当前项目代码，
     // 回列表后按代码定位行，再从下一行开始。
     // ============================================================
@@ -303,8 +295,8 @@
         return { code, name };
     }
 
-    /** 在 el-table 列表中找到含指定关键字的下一个状态行并点击 */
-    function clickNextStatusContains(keyword) {
+    /** 点击表格中的下一行（不挑状态，顺序遍历） */
+    function clickNextRow() {
         const trList = [...document.querySelectorAll(".el-table__body-wrapper tbody tr.el-table__row")];
         if (!trList.length) { toast("列表未加载"); return false; }
 
@@ -328,39 +320,34 @@
             if (idx >= 0) window.__lastClickedRowIndex__ = idx;
         }
 
-        // ---- 阶段 3：从当前行的下一行开始找关键字 ----
-        const startIdx = window.__lastClickedRowIndex__ + 1;
-        for (let i = startIdx; i < trList.length; i++) {
-            const tr = trList[i];
-            const cells = tr.querySelectorAll("td .cell");
-            if (cells.length < 3) continue;
-
-            const status = cells[2].textContent.replace(/\s+/g, " ").trim();
-            if (status.includes(keyword)) {
-                const projectCode = cells[0].textContent.trim();
-                const projectName = cells[1].textContent.trim();
-
-                // 记录本次点击的行
-                window.__currentProjectCode__ = projectCode;
-                window.__currentProjectName__ = projectName;
-                window.__lastClickedRowIndex__ = i;
-                window.__ssInstance__ = null; // 清空旧实例
-
-                tr.scrollIntoView({ block: "center", behavior: "smooth" });
-                // 延迟执行点击，确保滚动完成
-                setTimeout(() => {
-                    tr.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-                    tr.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-                    toast(`已点击：${projectName}`);
-                }, 350);
-                return true;
-            }
+        // ---- 阶段 3：从当前行的下一行开始，取下一个项目 ----
+        const nextIdx = window.__lastClickedRowIndex__ + 1;
+        if (nextIdx >= trList.length) {
+            toast("已处理完列表中的所有项目");
+            window.__lastClickedRowIndex__ = -1;
+            return false;
         }
 
-        // ---- 处理完了 ----
-        toast(`已处理完所有"${keyword}"的行（共 ${trList.length} 行）`);
-        window.__lastClickedRowIndex__ = -1;
-        return false;
+        const tr = trList[nextIdx];
+        const cells = tr.querySelectorAll("td .cell");
+        if (cells.length < 2) { toast("无法读取项目信息"); return false; }
+
+        const projectCode = cells[0].textContent.trim();
+        const projectName = cells[1].textContent.trim();
+
+        // 记录本次点击的行
+        window.__currentProjectCode__ = projectCode;
+        window.__currentProjectName__ = projectName;
+        window.__lastClickedRowIndex__ = nextIdx;
+        window.__ssInstance__ = null;
+
+        tr.scrollIntoView({ block: "center", behavior: "smooth" });
+        setTimeout(() => {
+            tr.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+            tr.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            toast(`已点击：${projectName}`);
+        }, 350);
+        return true;
     }
 
     // 生成"下一条"按钮
@@ -370,7 +357,7 @@
     btnNext.addEventListener("mouseenter", () => (btnNext.style.opacity = "0.85"));
     btnNext.addEventListener("mouseleave", () => (btnNext.style.opacity = "1"));
     btnNext.addEventListener("click", () => {
-        const found = clickNextStatusContains("验收不通过");
+        const found = clickNextRow();
         if (found) {
             // 等行点击完成后自动进入等待填值模式
             setTimeout(() => {
@@ -759,5 +746,8 @@
 
     // 控制台确认脚本已加载
     _log('ok', "上传读取器已加载 @ " + location.href);
+
+    // 脚本加载后自动设置每页1000条
+    setTimeout(() => { initPage(); }, 3000);
 
 })();
