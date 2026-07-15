@@ -5,7 +5,7 @@
 // @description  自动填写投资项目入库审核平台数据，导出A类错误
 // @match        http://10.42.31.22:7443/stat/collect/InputOrganForm*
 // @grant        none
-// @require      https://cdn.staticfile.net/xlsx/0.18.5/xlsx.full.min.js
+// @require      https://cdnjs.webstatic.cn/ajax/libs/xlsx/0.18.5/xlsx.full.min.js
 // @run-at       document-idle
 // @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/投资项目一键填写.user.js
 // @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/投资项目一键填写.user.js
