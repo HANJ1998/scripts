@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         投资项目一键填写
 // @namespace    https://workbuddy.local/投资项目一键填写
-// @version      1.6
+// @version      1.7
 // @description  自动填写投资项目入库审核平台数据，记录和导出审核错误
 // @match        http://10.42.31.22:7443/stat/collect/InputOrganForm*
 // @grant        none
@@ -380,7 +380,21 @@
     });
     btnNext.addEventListener("mouseenter", () => (btnNext.style.opacity = "0.85"));
     btnNext.addEventListener("mouseleave", () => (btnNext.style.opacity = "1"));
-    btnNext.addEventListener("click", () => clickNextStatusContains("验收不通过"));
+    btnNext.addEventListener("click", () => {
+        const found = clickNextStatusContains("验收不通过");
+        if (found) {
+            // 等行点击完成后自动进入等待填值模式
+            setTimeout(() => {
+                if (!window.__xlsxData__) {
+                    toast("请先选择 xlsx 文件");
+                    return;
+                }
+                window.__ssInstance__ = null;
+                window.__pendingAutoFill__ = true;
+                toast("下一条已就绪，请双击报表任一单元格");
+            }, 1000);
+        }
+    });
 
     // ============================================================
     // "一键填写" 按钮
