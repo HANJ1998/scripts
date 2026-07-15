@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         投资项目一键填写
 // @namespace    https://workbuddy.local/投资项目一键填写
-// @version      1.9
+// @version      2.0
 // @description  自动填写投资项目入库审核平台数据，记录和导出审核错误
 // @match        http://10.42.31.22:7443/stat/collect/InputOrganForm*
 // @grant        none
@@ -267,15 +267,21 @@
     }
 
     // ============================================================
-    // "下一条" — 按表格顺序逐行走，不挑状态
-    //
-    // 每次从上次点击的下一行开始，点击进入填报页。
-    // 如果当前在填报页（有 __ssInstance__），先读取当前项目代码，
-    // 回列表后按代码定位行，再从下一行开始。
+    // "下一条" — 按顺序遍历，可选按状态筛选
     // ============================================================
     window.__currentProjectCode__ = '';   // 当前处理的项目代码（主键）
     window.__currentProjectName__ = '';   // 当前处理的项目名称（toast 用）
     window.__lastClickedRowIndex__ = -1;  // 上次点击在 trList 中的索引
+
+    /** 筛选下拉框 */
+    const filterSelect = document.createElement("select");
+    filterSelect.style.cssText = "padding:4px 6px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;cursor:pointer;outline:none;background:#fff;";
+    ['全部', '未录入', '暂存', '已上报', '验收通过', '验收不通过', '重新上报'].forEach(v => {
+        const opt = document.createElement("option");
+        opt.value = v === '全部' ? '' : v;
+        opt.textContent = v;
+        filterSelect.appendChild(opt);
+    });
 
     /** 从 spreadsheet 实例读取 XMDM（项目代码）和 XMMC（项目名称） */
     function readProjectInfoFromInstance() {
@@ -295,8 +301,8 @@
         return { code, name };
     }
 
-    /** 点击表格中的下一行（不挑状态，顺序遍历） */
-    function clickNextRow() {
+    /** 点击表格中的下一行，可选按状态筛选 */
+    function clickNextRow(filterKeyword) {
         const trList = [...document.querySelectorAll(".el-table__body-wrapper tbody tr.el-table__row")];
         if (!trList.length) { toast("列表未加载"); return false; }
 
@@ -307,11 +313,11 @@
                 window.__currentProjectCode__ = info.code;
                 window.__currentProjectName__ = info.name;
             }
-            window.__ssInstance__ = null;             // 清空实例，后面用新的
-            window.__lastClickedRowIndex__ = -1;      // 重置，按代码定位
+            window.__ssInstance__ = null;
+            window.__lastClickedRowIndex__ = -1;
         }
 
-        // ---- 阶段 2：按项目代码定位当前行（回列表后的场景） ----
+        // ---- 阶段 2：按项目代码定位当前行 ----
         if (window.__currentProjectCode__ && window.__lastClickedRowIndex__ < 0) {
             const idx = trList.findIndex(tr => {
                 const cells = tr.querySelectorAll("td .cell");
@@ -320,34 +326,41 @@
             if (idx >= 0) window.__lastClickedRowIndex__ = idx;
         }
 
-        // ---- 阶段 3：从当前行的下一行开始，取下一个项目 ----
-        const nextIdx = window.__lastClickedRowIndex__ + 1;
-        if (nextIdx >= trList.length) {
-            toast("已处理完列表中的所有项目");
-            window.__lastClickedRowIndex__ = -1;
-            return false;
+        // ---- 阶段 3：从下一行开始找匹配的行 ----
+        const startIdx = window.__lastClickedRowIndex__ + 1;
+        for (let i = startIdx; i < trList.length; i++) {
+            const tr = trList[i];
+            const cells = tr.querySelectorAll("td .cell");
+            if (cells.length < 2) continue;
+
+            // 如果设了筛选，检查状态列是否匹配
+            if (filterKeyword) {
+                const status = cells[2]?.textContent.replace(/\s+/g, " ").trim() || '';
+                if (!status.includes(filterKeyword)) continue;
+            }
+
+            const projectCode = cells[0].textContent.trim();
+            const projectName = cells[1].textContent.trim();
+
+            window.__currentProjectCode__ = projectCode;
+            window.__currentProjectName__ = projectName;
+            window.__lastClickedRowIndex__ = i;
+            window.__ssInstance__ = null;
+
+            tr.scrollIntoView({ block: "center", behavior: "smooth" });
+            setTimeout(() => {
+                tr.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+                tr.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+                toast(`已点击：${projectName}`);
+            }, 350);
+            return true;
         }
 
-        const tr = trList[nextIdx];
-        const cells = tr.querySelectorAll("td .cell");
-        if (cells.length < 2) { toast("无法读取项目信息"); return false; }
-
-        const projectCode = cells[0].textContent.trim();
-        const projectName = cells[1].textContent.trim();
-
-        // 记录本次点击的行
-        window.__currentProjectCode__ = projectCode;
-        window.__currentProjectName__ = projectName;
-        window.__lastClickedRowIndex__ = nextIdx;
-        window.__ssInstance__ = null;
-
-        tr.scrollIntoView({ block: "center", behavior: "smooth" });
-        setTimeout(() => {
-            tr.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-            tr.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-            toast(`已点击：${projectName}`);
-        }, 350);
-        return true;
+        // ---- 处理完了 ----
+        const label = filterKeyword || '全部';
+        toast(`已处理完所有"${label}"的项目`);
+        window.__lastClickedRowIndex__ = -1;
+        return false;
     }
 
     // 生成"下一条"按钮
@@ -357,9 +370,9 @@
     btnNext.addEventListener("mouseenter", () => (btnNext.style.opacity = "0.85"));
     btnNext.addEventListener("mouseleave", () => (btnNext.style.opacity = "1"));
     btnNext.addEventListener("click", () => {
-        const found = clickNextRow();
+        const keyword = filterSelect.value;
+        const found = clickNextRow(keyword);
         if (found) {
-            // 等行点击完成后自动进入等待填值模式
             setTimeout(() => {
                 if (!window.__xlsxData__) {
                     toast("请先选择 xlsx 文件");
@@ -717,7 +730,8 @@
         boxShadow: "0 2px 12px rgba(0,0,0,.15)",
         fontFamily: "system-ui, -apple-system, sans-serif",
     });
-    // 按工作流顺序排列：初始化 → 下一条 → 记录 → 自动填 → 导出
+    // 按工作流顺序：筛选 → 初始化 → 下一条 → 记录 → 自动填 → 导出
+    btnContainer.appendChild(filterSelect);
     btnContainer.appendChild(btnInit);
     btnContainer.appendChild(btnNext);
     btnContainer.appendChild(btnRefreshAudit);
