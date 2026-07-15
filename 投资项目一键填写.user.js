@@ -623,7 +623,7 @@
     async function storeAudit() {
         const projectCode = window.__currentProjectCode__ || '';
         const projectName = window.__currentProjectName__ || '';
-        if (!projectCode) { toast('无项目代码，请先点击"下一个不通过"'); return; }
+        if (!projectCode) { toast('无项目代码，请先点"下一条"'); return; }
 
         // 先点击审核按钮刷新数据，等 1s
         const clicked = await clickAuditBtn();
@@ -697,11 +697,7 @@
     // 生成"初始化"按钮
     const btnInit = document.createElement("button");
     btnInit.textContent = "初始化";
-    Object.assign(btnInit.style, {
-        padding: "6px 12px", background: "#409eff",
-        color: "#fff", border: "none", borderRadius: "4px", fontSize: "13px",
-        cursor: "pointer", fontWeight: "bold",
-    });
+    btnInit.style.cssText = "padding:6px 12px;background:#409eff;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-weight:bold;";
     btnInit.addEventListener("mouseenter", () => (btnInit.style.opacity = "0.85"));
     btnInit.addEventListener("mouseleave", () => (btnInit.style.opacity = "1"));
     btnInit.addEventListener("click", initPage);
@@ -725,20 +721,6 @@
     // ============================================================
     // 按钮挂载——顶部居中一行
     // ============================================================
-    // 移除所有按钮的 position fixed，改为由容器定位
-    const allBtnElements = [
-        btnAutoFill, btnRefreshAudit, btnExportAudit,
-        btnNext, btnInit, fileInput,
-    ];
-    allBtnElements.forEach(b => {
-        if (b.style) {
-            b.style.position = '';    // 去掉 fixed
-            b.style.bottom = '';      // 去掉 bottom
-            b.style.right = '';       // 去掉 right
-        }
-    });
-
-    // 创建顶部容器
     const btnContainer = document.createElement("div");
     Object.assign(btnContainer.style, {
         position: "fixed", top: "0", left: "50%", transform: "translateX(-50%)",
