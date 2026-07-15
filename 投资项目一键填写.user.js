@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         投资项目一键填写
 // @namespace    https://workbuddy.local/投资项目一键填写
-// @version      1.4.3
-// @description  自动填写投资项目入库审核平台数据，导出A类错误
+// @version      1.5
+// @description  自动填写投资项目入库审核平台数据，记录和导出审核错误
 // @match        http://10.42.31.22:7443/stat/collect/InputOrganForm*
 // @grant        none
 // @require      https://cdnjs.webstatic.cn/ajax/libs/xlsx/0.18.5/xlsx.full.min.js
@@ -577,9 +577,6 @@
         _log('ok', `填值完成 ${displayName}：${filledCount} 成功${errors.length ? '，' + errors.length + ' 失败' : ''}`);
         if (errors.length) _log('warn', "错误:", errors);
 
-        // 自动存储审核错误（A 开头）
-        setTimeout(async () => { await storeAudit(); }, 500);
-
         return true;
     }
 
@@ -638,7 +635,7 @@
         });
     }
 
-    /** 存储当前项目的 A 开头审核错误 */
+    /** 记录当前项目的 A 类强制性审核错误 */
     async function storeAudit() {
         const projectCode = window.__currentProjectCode__ || '';
         const projectName = window.__currentProjectName__ || '';
@@ -649,16 +646,16 @@
         if (!clicked) { toast("未找到审核按钮"); return; }
 
         const allRows = scrapeAuditTable();
-        const aRows = allRows.filter(r => r.code.startsWith('A'));
-        if (!aRows.length) { toast(`${projectName}：无 A 类审核错误`); return; }
+        const aRows = allRows.filter(r => r.code.startsWith('A') && r.severity.includes('强制'));
+        if (!aRows.length) { toast(`${projectName}：无 A 类强制性审核错误`); return; }
 
         // 覆盖已有记录
         const idx = window.__auditErrors__.findIndex(e => e.projectCode === projectCode);
         if (idx >= 0) window.__auditErrors__.splice(idx, 1);
         window.__auditErrors__.push({ projectCode, projectName, errors: aRows });
 
-        toast(`${projectName}：已记录 ${aRows.length} 条 A 类审核错误`);
-        _log('ok', `存储审核 ${projectName}：${aRows.length} 条`);
+        toast(`${projectName}：已记录 ${aRows.length} 条 A 类强制性错误`);
+        _log('ok', `记录审核错误 ${projectName}：${aRows.length} 条`);
     }
 
     /** 导出所有审核错误 */
@@ -713,9 +710,9 @@
         _log('ok', `填入审核修正说明：${count} 项`);
     }
 
-    // 生成"导出A类错误"按钮
+    // 生成"导出错误"按钮
     const btnExportAudit = document.createElement("button");
-    btnExportAudit.textContent = "导出A类错误";
+    btnExportAudit.textContent = "导出错误";
     Object.assign(btnExportAudit.style, {
         position: "fixed", right: "20px", bottom: "180px",
         zIndex: "2147483647", padding: "8px 14px", background: "#ff9800",
@@ -741,9 +738,9 @@
     btnFillAudit.addEventListener("mouseleave", () => (btnFillAudit.style.opacity = "1"));
     btnFillAudit.addEventListener("click", fillAuditInputs);
 
-    // 生成"更新错误"按钮（手动刷新当前项目的审核错误记录）
+    // 生成"记录错误"按钮（手动记录当前项目的 A 类强制性审核错误）
     const btnRefreshAudit = document.createElement("button");
-    btnRefreshAudit.textContent = "更新错误";
+    btnRefreshAudit.textContent = "记录错误";
     Object.assign(btnRefreshAudit.style, {
         position: "fixed", right: "20px", bottom: "260px",
         zIndex: "2147483647", padding: "8px 14px", background: "#607d8b",
