@@ -287,6 +287,21 @@
 
     /** 从 spreadsheet 实例读取 XMDM（项目代码）和 XMMC（项目名称） */
     function readProjectInfoFromInstance() {
+        const inst = window.__ssInstance__;
+        if (!inst) return { code: '', name: '' };
+        const rowsObj = inst.rows._;
+        let code = '', name = '';
+        Object.keys(rowsObj).filter(k => /^\d+$/.test(k)).forEach(rk => {
+            const row = rowsObj[rk];
+            if (!row || !row.cells) return;
+            Object.keys(row.cells).filter(k => /^\d+$/.test(k)).forEach(ck => {
+                const c = row.cells[ck];
+                if (c && c.fieldCode === 'XMDM') code = c.value || c.text || '';
+                if (c && c.fieldCode === 'XMMC') name = c.value || c.text || '';
+            });
+        });
+        return { code, name };
+    }
 
     /** 在 el-table 列表中找到含指定关键字的下一个状态行并点击 */
     function clickNextStatusContains(keyword) {
