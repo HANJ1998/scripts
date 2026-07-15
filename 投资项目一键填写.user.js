@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         投资项目一键填写
 // @namespace    https://workbuddy.local/投资项目一键填写
-// @version      1.5
+// @version      1.6
 // @description  自动填写投资项目入库审核平台数据，记录和导出审核错误
 // @match        http://10.42.31.22:7443/stat/collect/InputOrganForm*
 // @grant        none
@@ -184,20 +184,7 @@
 
     // ============================================================
     // Element UI el-select 下拉框操作
-    // 通过 XPath 定位 input → 展开下拉 → 选第 N 项
     // ============================================================
-    const DROPDOWNS = [
-        {
-            label: "筛选不通过",
-            xpath: '//*[@class="el-form table-left-content-from"]//div[3]/div/div/div/div/input',
-            nth: 6,  // 选第 6 项
-        },
-        {
-            label: "每页1000条",
-            xpath: '//*[@class="el-pagination__sizes"]//div/div/input',
-            nth: 7,  // 选第 7 项（"1000 条/页"）
-        },
-    ];
 
     /** 通用 XPath 查询 */
     function findByXPath(xpath) {
@@ -215,59 +202,55 @@
         return null;
     }
 
-    /** 展开下拉框并点击第 n 项 */
+    /** 展开下拉框并点击第 n 项（Promise 形式，可 await） */
     function selectDropdownNth(xpath, n) {
-        const input = findByXPath(xpath);
-        if (!input) { toast("未找到下拉框 input"); return false; }
+        return new Promise((resolve) => {
+            const input = findByXPath(xpath);
+            if (!input) { toast("未找到下拉框 input"); resolve(false); return; }
 
-        input.scrollIntoView({ block: "center", behavior: "smooth" });
+            input.scrollIntoView({ block: "center", behavior: "smooth" });
 
-        // Element UI 的 el-select 监听 mousedown 触发展开
-        const select = input.closest(".el-select") || input;
-        select.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-        select.click();
-        input.focus();
+            // Element UI 的 el-select 监听 mousedown 触发展开
+            const select = input.closest(".el-select") || input;
+            select.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+            select.click();
+            input.focus();
 
-        // 轮询等待下拉菜单渲染后点击第 n 项
-        let tries = 0;
-        const timer = setInterval(() => {
-            tries++;
-            const dd = findVisibleDropdown();
-            const items = dd ? dd.querySelectorAll(".el-select-dropdown__item:not(.is-disabled)") : [];
-            if (items.length >= n) {
-                clearInterval(timer);
-                items[n - 1].click();
-                return true;
-            }
-            if (tries >= 20) { // 1 秒超时
-                clearInterval(timer);
-                toast(`选项不足（当前 ${items.length} 项）`);
-                return false;
-            }
-        }, 50);
+            // 轮询等待下拉菜单渲染后点击第 n 项
+            let tries = 0;
+            const timer = setInterval(() => {
+                tries++;
+                const dd = findVisibleDropdown();
+                const items = dd ? dd.querySelectorAll(".el-select-dropdown__item:not(.is-disabled)") : [];
+                if (items.length >= n) {
+                    clearInterval(timer);
+                    items[n - 1].click();
+                    resolve(true);
+                }
+                if (tries >= 20) { // 1 秒超时
+                    clearInterval(timer);
+                    toast(`选项不足（当前 ${items.length} 项）`);
+                    resolve(false);
+                }
+            }, 50);
+        });
     }
 
-    // 循环生成下拉按钮（配置驱动，新增下拉只需在 DROPDOWNS 加一行）
-    const dropdownButtons = [];
-    // 按钮颜色：每个按钮不同，避免混淆
-    const BTN_COLORS = ['#409eff', '#909399'];
-    DROPDOWNS.forEach((cfg, i) => {
-        const b = document.createElement("button");
-        b.textContent = cfg.label;
-        Object.assign(b.style, {
-            position: "fixed", right: "20px", bottom: `${60 + i * 40}px`,
-            zIndex: "2147483647", padding: "8px 14px", background: BTN_COLORS[i],
-            color: "#fff", border: "none", borderRadius: "6px", fontSize: "13px",
-            cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,.2)",
-            fontFamily: "system-ui, -apple-system, sans-serif",
-        });
-        b.addEventListener("mouseenter", () => (b.style.opacity = "0.85"));
-        b.addEventListener("mouseleave", () => (b.style.opacity = "1"));
-        b.addEventListener("click", () => selectDropdownNth(cfg.xpath, cfg.nth));
-        dropdownButtons.push(b);
-    });
-    // 每页1000条放在最底部（20px），与循环公式错开
-    if (dropdownButtons[1]) dropdownButtons[1].style.bottom = "20px";
+    /** 初始化页面：设置每页1000条 → 筛选不通过 */
+    async function initPage() {
+        toast("初始化：设置每页1000条...");
+        await selectDropdownNth(
+            '//*[@class="el-pagination__sizes"]//div/div/input',
+            7
+        );
+        await new Promise(r => setTimeout(r, 500));
+        toast("初始化：筛选不通过...");
+        await selectDropdownNth(
+            '//*[@class="el-form table-left-content-from"]//div[3]/div/div/div/div/input',
+            6
+        );
+        toast("初始化完成");
+    }
 
     // ============================================================
     // 顶部 toast 提示（自动 2.5 秒消失）
@@ -385,9 +368,9 @@
         return false;
     }
 
-    // 生成"下一个不通过"按钮（红色，最下方）
+    // 生成"下一条"按钮
     const btnNext = document.createElement("button");
-    btnNext.textContent = "下一个不通过";
+    btnNext.textContent = "下一条";
     Object.assign(btnNext.style, {
         position: "fixed", right: "20px", bottom: "100px",
         zIndex: "2147483647", padding: "8px 14px", background: "#f56c6c",
@@ -423,9 +406,9 @@
         return false;
     }
 
-    // 生成"一键填写"按钮（绿色，最上方）
+    // 生成"自动填"按钮
     const btnAutoFill = document.createElement("button");
-    btnAutoFill.textContent = "一键填写审核";
+    btnAutoFill.textContent = "自动填";
     Object.assign(btnAutoFill.style, {
         position: "fixed", right: "20px", bottom: "140px",
         zIndex: "2147483647", padding: "8px 14px", background: "#67c23a",
@@ -577,6 +560,15 @@
         _log('ok', `填值完成 ${displayName}：${filledCount} 成功${errors.length ? '，' + errors.length + ' 失败' : ''}`);
         if (errors.length) _log('warn', "错误:", errors);
 
+        // 自动填入审核说明
+        setTimeout(async () => {
+            const clicked = await clickAuditBtn();
+            if (clicked) {
+                fillAuditInputs();
+                toast(`${displayName}：已自动填入审核说明`);
+            }
+        }, 800);
+
         return true;
     }
 
@@ -710,6 +702,18 @@
         _log('ok', `填入审核修正说明：${count} 项`);
     }
 
+    // 生成"初始化"按钮
+    const btnInit = document.createElement("button");
+    btnInit.textContent = "初始化";
+    Object.assign(btnInit.style, {
+        padding: "6px 12px", background: "#409eff",
+        color: "#fff", border: "none", borderRadius: "4px", fontSize: "13px",
+        cursor: "pointer", fontWeight: "bold",
+    });
+    btnInit.addEventListener("mouseenter", () => (btnInit.style.opacity = "0.85"));
+    btnInit.addEventListener("mouseleave", () => (btnInit.style.opacity = "1"));
+    btnInit.addEventListener("click", initPage);
+
     // 生成"导出错误"按钮
     const btnExportAudit = document.createElement("button");
     btnExportAudit.textContent = "导出错误";
@@ -724,23 +728,9 @@
     btnExportAudit.addEventListener("mouseleave", () => (btnExportAudit.style.opacity = "1"));
     btnExportAudit.addEventListener("click", exportAudit);
 
-    // 生成"填入审核说明"按钮
-    const btnFillAudit = document.createElement("button");
-    btnFillAudit.textContent = "填入审核说明";
-    Object.assign(btnFillAudit.style, {
-        position: "fixed", right: "20px", bottom: "220px",
-        zIndex: "2147483647", padding: "8px 14px", background: "#9c27b0",
-        color: "#fff", border: "none", borderRadius: "6px", fontSize: "13px",
-        cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,.2)",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-    });
-    btnFillAudit.addEventListener("mouseenter", () => (btnFillAudit.style.opacity = "0.85"));
-    btnFillAudit.addEventListener("mouseleave", () => (btnFillAudit.style.opacity = "1"));
-    btnFillAudit.addEventListener("click", fillAuditInputs);
-
-    // 生成"记录错误"按钮（手动记录当前项目的 A 类强制性审核错误）
+    // 生成"记录"按钮（手动记录当前项目的 A 类强制性审核错误）
     const btnRefreshAudit = document.createElement("button");
-    btnRefreshAudit.textContent = "记录错误";
+    btnRefreshAudit.textContent = "记录";
     Object.assign(btnRefreshAudit.style, {
         position: "fixed", right: "20px", bottom: "260px",
         zIndex: "2147483647", padding: "8px 14px", background: "#607d8b",
@@ -757,8 +747,8 @@
     // ============================================================
     // 移除所有按钮的 position fixed，改为由容器定位
     const allBtnElements = [
-        btnAutoFill, btnFillAudit, btnRefreshAudit, btnExportAudit,
-        ...dropdownButtons, btnNext, fileInput,
+        btnAutoFill, btnRefreshAudit, btnExportAudit,
+        btnNext, btnInit, fileInput,
     ];
     allBtnElements.forEach(b => {
         if (b.style) {
@@ -778,14 +768,12 @@
         boxShadow: "0 2px 12px rgba(0,0,0,.15)",
         fontFamily: "system-ui, -apple-system, sans-serif",
     });
-    // 把按钮放入容器（fileInput 保持隐藏）
-    btnContainer.appendChild(btnExportAudit);
-    btnContainer.appendChild(dropdownButtons[1]);
-    btnContainer.appendChild(dropdownButtons[0]);
-    btnContainer.appendChild(btnFillAudit);
-    btnContainer.appendChild(btnRefreshAudit);
+    // 按工作流顺序排列：初始化 → 下一条 → 记录 → 自动填 → 导出
+    btnContainer.appendChild(btnInit);
     btnContainer.appendChild(btnNext);
+    btnContainer.appendChild(btnRefreshAudit);
     btnContainer.appendChild(btnAutoFill);
+    btnContainer.appendChild(btnExportAudit);
     btnContainer.appendChild(fileInput);
 
     let mounted = false;
