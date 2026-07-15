@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         投资项目一键填写
 // @namespace    https://workbuddy.local/投资项目一键填写
-// @version      2.0
+// @version      2.1
 // @description  自动填写投资项目入库审核平台数据，记录和导出审核错误
 // @match        http://10.42.31.22:7443/stat/collect/InputOrganForm*
 // @grant        none
@@ -250,7 +250,10 @@
     // 顶部 toast 提示（自动 2.5 秒消失）
     // ============================================================
     function toast(msg) {
+        const existing = document.querySelector('#__wb_toast__');
+        if (existing) existing.remove();
         const t = document.createElement("div");
+        t.id = "__wb_toast__";
         t.textContent = msg;
         Object.assign(t.style, {
             position: "fixed", left: "50%", top: "50px", transform: "translateX(-50%)",
@@ -694,14 +697,6 @@
         _log('ok', `填入审核修正说明：${count} 项`);
     }
 
-    // 生成"初始化"按钮
-    const btnInit = document.createElement("button");
-    btnInit.textContent = "初始化";
-    btnInit.style.cssText = "padding:6px 12px;background:#409eff;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-weight:bold;";
-    btnInit.addEventListener("mouseenter", () => (btnInit.style.opacity = "0.85"));
-    btnInit.addEventListener("mouseleave", () => (btnInit.style.opacity = "1"));
-    btnInit.addEventListener("click", initPage);
-
     // 生成"导出错误"按钮
     const btnExportAudit = document.createElement("button");
     btnExportAudit.textContent = "导出错误";
@@ -730,12 +725,11 @@
         boxShadow: "0 2px 12px rgba(0,0,0,.15)",
         fontFamily: "system-ui, -apple-system, sans-serif",
     });
-    // 按工作流顺序：筛选 → 初始化 → 下一条 → 记录 → 自动填 → 导出
+    // 筛选 → 下一条 → 自动填 → 记录 → 导出
     btnContainer.appendChild(filterSelect);
-    btnContainer.appendChild(btnInit);
     btnContainer.appendChild(btnNext);
-    btnContainer.appendChild(btnRefreshAudit);
     btnContainer.appendChild(btnAutoFill);
+    btnContainer.appendChild(btnRefreshAudit);
     btnContainer.appendChild(btnExportAudit);
     btnContainer.appendChild(fileInput);
 
