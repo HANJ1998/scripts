@@ -287,26 +287,6 @@
 
     /** 从 spreadsheet 实例读取 XMDM（项目代码）和 XMMC（项目名称） */
     function readProjectInfoFromInstance() {
-        const inst = window.__ssInstance__;
-        if (!inst) return { code: '', name: '' };
-        const rowsObj = inst.rows._;
-        let code = '', name = '';
-        Object.keys(rowsObj).filter(k => /^\d+$/.test(k)).forEach(rk => {
-            const row = rowsObj[rk];
-            if (!row || !row.cells) return;
-            Object.keys(row.cells).filter(k => /^\d+$/.test(k)).forEach(ck => {
-                const c = row.cells[ck];
-                if (c && c.fieldCode === 'XMDM') code = c.value || c.text || '';
-                if (c && c.fieldCode === 'XMMC') name = c.value || c.text || '';
-            });
-        });
-        return { code, name };
-    }
-
-    // 兼容旧代码（只需项目代码的地方）
-    function readProjectCodeFromInstance() {
-        return readProjectInfoFromInstance().code;
-    }
 
     /** 在 el-table 列表中找到含指定关键字的下一个状态行并点击 */
     function clickNextStatusContains(keyword) {
@@ -371,13 +351,7 @@
     // 生成"下一条"按钮
     const btnNext = document.createElement("button");
     btnNext.textContent = "下一条";
-    Object.assign(btnNext.style, {
-        position: "fixed", right: "20px", bottom: "100px",
-        zIndex: "2147483647", padding: "8px 14px", background: "#f56c6c",
-        color: "#fff", border: "none", borderRadius: "6px", fontSize: "13px",
-        cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,.2)",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-    });
+    btnNext.style.cssText = "padding:6px 12px;background:#f56c6c;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-weight:bold;";
     btnNext.addEventListener("mouseenter", () => (btnNext.style.opacity = "0.85"));
     btnNext.addEventListener("mouseleave", () => (btnNext.style.opacity = "1"));
     btnNext.addEventListener("click", () => {
@@ -389,7 +363,6 @@
                     toast("请先选择 xlsx 文件");
                     return;
                 }
-                window.__ssInstance__ = null;
                 window.__pendingAutoFill__ = true;
                 toast("下一条已就绪，请双击报表任一单元格");
             }, 1000);
@@ -408,28 +381,22 @@
     // ============================================================
     window.__pendingAutoFill__ = false; // true = 等待双击后自动填值
 
-    async function autoFill() {
+    function autoFill() {
         if (!window.__xlsxData__) {
             toast("请先选择 xlsx 文件");
-            fileInput.click(); // 弹出文件选择器
+            fileInput.click();
             return false;
         }
-        window.__ssInstance__ = null;     // 清空旧实例
-        window.__pendingAutoFill__ = true; // 注册 pending
-        toast("请双击报表任一单元格，双击后自动填值");
+        window.__ssInstance__ = null;
+        window.__pendingAutoFill__ = true;
+        toast("请双击报表任一单元格");
         return false;
     }
 
     // 生成"自动填"按钮
     const btnAutoFill = document.createElement("button");
     btnAutoFill.textContent = "自动填";
-    Object.assign(btnAutoFill.style, {
-        position: "fixed", right: "20px", bottom: "140px",
-        zIndex: "2147483647", padding: "8px 14px", background: "#67c23a",
-        color: "#fff", border: "none", borderRadius: "6px", fontSize: "13px",
-        cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,.2)",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-    });
+    btnAutoFill.style.cssText = "padding:6px 12px;background:#67c23a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-weight:bold;";
     btnAutoFill.addEventListener("mouseenter", () => (btnAutoFill.style.opacity = "0.85"));
     btnAutoFill.addEventListener("mouseleave", () => (btnAutoFill.style.opacity = "1"));
     btnAutoFill.addEventListener("click", () => autoFill());
@@ -588,10 +555,6 @@
 
     // ============================================================
     // 审核错误收集 & 导出
-    //
-    // 1. "存储审核"按钮：从 pane-shcw 表格读取当前页面的审核错误，
-    //    只记录审核代码以 A 开头的，和当前项目代码/名称一起存储。
-    // 2. "导出审核"按钮：打印所有已收集的审核错误。
     // ============================================================
     window.__auditErrors__ = []; // { projectCode, projectName, errors: [{code, desc, severity}] }
 
@@ -731,27 +694,15 @@
     // 生成"导出错误"按钮
     const btnExportAudit = document.createElement("button");
     btnExportAudit.textContent = "导出错误";
-    Object.assign(btnExportAudit.style, {
-        position: "fixed", right: "20px", bottom: "180px",
-        zIndex: "2147483647", padding: "8px 14px", background: "#ff9800",
-        color: "#fff", border: "none", borderRadius: "6px", fontSize: "13px",
-        cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,.2)",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-    });
+    btnExportAudit.style.cssText = "padding:6px 12px;background:#ff9800;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-weight:bold;";
     btnExportAudit.addEventListener("mouseenter", () => (btnExportAudit.style.opacity = "0.85"));
     btnExportAudit.addEventListener("mouseleave", () => (btnExportAudit.style.opacity = "1"));
     btnExportAudit.addEventListener("click", exportAudit);
 
-    // 生成"记录"按钮（手动记录当前项目的 A 类强制性审核错误）
+    // 生成"记录"按钮
     const btnRefreshAudit = document.createElement("button");
     btnRefreshAudit.textContent = "记录";
-    Object.assign(btnRefreshAudit.style, {
-        position: "fixed", right: "20px", bottom: "260px",
-        zIndex: "2147483647", padding: "8px 14px", background: "#607d8b",
-        color: "#fff", border: "none", borderRadius: "6px", fontSize: "13px",
-        cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,.2)",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-    });
+    btnRefreshAudit.style.cssText = "padding:6px 12px;background:#607d8b;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-weight:bold;";
     btnRefreshAudit.addEventListener("mouseenter", () => (btnRefreshAudit.style.opacity = "0.85"));
     btnRefreshAudit.addEventListener("mouseleave", () => (btnRefreshAudit.style.opacity = "1"));
     btnRefreshAudit.addEventListener("click", storeAudit);
