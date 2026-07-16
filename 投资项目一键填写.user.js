@@ -379,6 +379,7 @@
             setTimeout(() => {
                 if (!window.__xlsxData__) {
                     toast("请先选择 xlsx 文件");
+                    fileInput.click();
                     return;
                 }
                 window.__pendingAutoFill__ = true;
