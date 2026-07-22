@@ -6,7 +6,7 @@
 // @author       You
 // @match        http*://scjg.hubei.gov.cn/hbssj/meta/HBSSJ/analyses/CSTM-17956/*
 // @grant        none
-// @require      https://cdnjs.webstatic.cn/ajax/libs/xlsx/0.18.5/xlsx.full.min.js
+// @require      https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js
 // @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/双随机脚本.js
 // @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/双随机脚本.js
 // @license      MIT

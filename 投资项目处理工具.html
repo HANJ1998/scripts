@@ -8,9 +8,15 @@
     <!-- author: hanj1998@foxmail.com -->
     <!-- license: MIT -->
     <!-- version: 1.2 -->
-    <!-- update log: 更换xlsx库CDN为webstatic.cn -->
-    <!-- 添加SheetJS库用于生成Excel文件 -->
-    <script src="https://cdnjs.webstatic.cn/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- update log: 更换xlsx库CDN为jsDelivr，备用到unpkg -->
+    <!-- SheetJS库 - 优先从jsDelivr加载，失败后备用到unpkg -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
+            onerror="
+              let s = document.createElement('script');
+              s.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+              s.onload = function () { console.log('XLSX loaded from fallback CDN'); };
+              document.head.appendChild(s);
+            "></script>
     <style>
       /* 全局样式重置 */
       * {

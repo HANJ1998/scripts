@@ -5,7 +5,7 @@
 // @description  自动填写投资项目入库审核平台数据，记录和导出审核错误
 // @match        http://10.42.31.22:7443/stat/collect/InputOrganForm*
 // @grant        none
-// @require      https://cdnjs.webstatic.cn/ajax/libs/xlsx/0.18.5/xlsx.full.min.js
+// @require      https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js
 // @run-at       document-idle
 // @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/投资项目一键填写.user.js
 // @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/投资项目一键填写.user.js
@@ -514,8 +514,11 @@
         const changeLog = [];
 
         fillColumns.forEach(({ header, fieldCode, target }) => {
-            const val = rowData[header];
-            if (val === undefined || val === null || val === '') return; // 跳过空值
+            let val = rowData[header];
+            // 空值自动转为0
+            if (val === undefined || val === null || val === '') {
+                val = 0;
+            }
 
             try {
                 const strVal = String(val);
