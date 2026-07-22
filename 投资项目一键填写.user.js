@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         投资项目一键填写
 // @namespace    https://workbuddy.local/投资项目一键填写
-// @version      2.1
+// @version      2.2
 // @description  自动填写投资项目入库审核平台数据，记录和导出审核错误
 // @match        http://10.42.31.22:7443/stat/collect/InputOrganForm*
 // @grant        none
@@ -10,6 +10,11 @@
 // @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/投资项目一键填写.user.js
 // @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/投资项目一键填写.user.js
 // ==/UserScript==
+
+// ============================================================
+// Changelog
+// 2.2 - 2026-07-22: 空值自动填0; 替换失效CDN(cdnjs.webstatic.cn→jsDelivr)
+// ============================================================
 
 (function () {
     "use strict";
