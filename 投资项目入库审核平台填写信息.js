@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         投资项目入库审核平台填写信息
 // @namespace    https://github.com/hanj1998
-// @version      1.1
+// @version      1.0.1
 // @description  自动填写区县/地市现场核实人及时间
 // @author       hanj1998@foxmail.com
 // @match        *://10.42.181.70/*

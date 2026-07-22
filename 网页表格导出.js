@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         网页表格导出
 // @namespace    https://github.com/hanj1998
-// @version      1.4
+// @version      1.3.1
 // @description  在网页表格右上角添加导出按钮，支持导出为XLSX文件，处理长数字精度问题，监测网页实时变化
 // @author       hanj-cn@qq.com
 // @match        *://*/*

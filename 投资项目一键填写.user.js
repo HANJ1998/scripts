@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         投资项目一键填写
 // @namespace    https://workbuddy.local/投资项目一键填写
-// @version      2.4
+// @version      2.1.3
 // @description  自动填写投资项目入库审核平台数据，记录和导出审核错误
 // @match        http://10.42.31.22:7443/stat/collect/InputOrganForm*
 // @grant        none
@@ -13,9 +13,9 @@
 
 // ============================================================
 // Changelog
-// 2.4 - 2026-07-22: CDN切换到国内BootCDN
-// 2.3 - 2026-07-22: 移除噪音日志屏蔽，所有页面日志放行
-// 2.2 - 2026-07-22: 空值自动填0; 替换失效CDN(cdnjs.webstatic.cn→jsDelivr)
+// 2.1.3 - 2026-07-22: CDN切换到国内BootCDN
+// 2.1.2 - 2026-07-22: 移除噪音日志屏蔽，所有页面日志放行
+// 2.1.1 - 2026-07-22: 空值自动填0; 替换失效CDN(cdnjs.webstatic.cn→jsDelivr)
 // ============================================================
 
 (function () {

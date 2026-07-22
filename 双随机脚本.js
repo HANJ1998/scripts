@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         双随机脚本
 // @namespace    https://github.com/hanj1998
-// @version      0.6
+// @version      0.4.2
 // @description  导入企业名单Excel，自动执行抽取、比对
 // @author       You
 // @match        http*://scjg.hubei.gov.cn/hbssj/meta/HBSSJ/analyses/CSTM-17956/*
@@ -14,8 +14,8 @@
 
 // ============================================================
 // Changelog
-// 0.6 - 2026-07-22: CDN切换到国内BootCDN
-// 0.5 - 2026-07-22: 替换失效CDN(cdnjs.webstatic.cn→jsDelivr)
+// 0.4.2 - 2026-07-22: CDN切换到国内BootCDN
+// 0.4.1 - 2026-07-22: 替换失效CDN(cdnjs.webstatic.cn→jsDelivr)
 // ============================================================
 
 (function () {
