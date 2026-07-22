@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         投资项目一键填写
 // @namespace    https://workbuddy.local/投资项目一键填写
-// @version      2.2
+// @version      2.3
 // @description  自动填写投资项目入库审核平台数据，记录和导出审核错误
 // @match        http://10.42.31.22:7443/stat/collect/InputOrganForm*
 // @grant        none
@@ -13,6 +13,7 @@
 
 // ============================================================
 // Changelog
+// 2.3 - 2026-07-22: 移除噪音日志屏蔽，所有页面日志放行
 // 2.2 - 2026-07-22: 空值自动填0; 替换失效CDN(cdnjs.webstatic.cn→jsDelivr)
 // ============================================================
 
@@ -55,7 +56,6 @@
     // 该实例 e 在每次双击单元格时通过 console.log("[ data ]-1238", e) 暴露。
     //
     // 本 hook 拦截 console.log，捕获 e 存到 window.__ssInstance__，
-    // 并屏蔽页面自身的噪音日志（cell-change、cell-finished 等）。
     // 当检测到 pending autoFill 时，自动执行 executeFill()。
     // ============================================================
     window.__ssInstance__ = null;
@@ -69,22 +69,9 @@
         document.body.appendChild(_iframe);
         const _rawLog = _iframe.contentWindow.console.log.bind(console);
 
-        // 页面噪音日志关键字（占控制台输出 90%，全部屏蔽）
-        const NOISY_PATTERNS = [
-            'cell-finished', 'cell-change',             // 单元格值变化回调
-            'disableEdit', '~~~~~~~~', '=>',            // 组件内部调试
-            '该单元格没有对应填报规则', '无数据规则',   // 校验提示
-            'formAllRule', '填报 ', '双击了 fill',      // 规则引擎、双击事件
-        ];
-
         console.log = function (...args) {
             try {
                 const tag = String(args[0] || '');
-
-                // ---------- 屏蔽噪音日志 ----------
-                if (NOISY_PATTERNS.some(p => tag.includes(p))) {
-                    return; // 直接丢弃，不转发到控制台
-                }
 
                 // ---------- 捕获 [ data ] 打印的实例 e ----------
                 // 格式: [ data ]-1238 e {rows, cols, settings, ...}
@@ -116,14 +103,10 @@
                             }
                         }, 300); // 等 300ms 确保实例完全就绪
                     }
-                    return; // [ data ] 本身也是噪音，不转发
                 }
 
-                // 屏蔽 [ selectedCell ]（单元格选中事件，也是噪音）
-                if (tag.includes('[ selectedCell ]')) return;
-
             } catch (e) { /* hook 内异常不抛到页面 */ }
-            // 其他未匹配的页面日志照常转发
+            // 所有页面日志照常转发
             return _rawLog(...args);
         };
     })();
