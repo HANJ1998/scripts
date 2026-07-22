@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         投资项目一键填写
 // @namespace    https://workbuddy.local/投资项目一键填写
-// @version      2.3
+// @version      2.4
 // @description  自动填写投资项目入库审核平台数据，记录和导出审核错误
 // @match        http://10.42.31.22:7443/stat/collect/InputOrganForm*
 // @grant        none
-// @require      https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js
+// @require      https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js
 // @run-at       document-idle
 // @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/投资项目一键填写.user.js
 // @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/投资项目一键填写.user.js
@@ -13,6 +13,7 @@
 
 // ============================================================
 // Changelog
+// 2.4 - 2026-07-22: CDN切换到国内BootCDN
 // 2.3 - 2026-07-22: 移除噪音日志屏蔽，所有页面日志放行
 // 2.2 - 2026-07-22: 空值自动填0; 替换失效CDN(cdnjs.webstatic.cn→jsDelivr)
 // ============================================================

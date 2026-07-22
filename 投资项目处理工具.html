@@ -7,13 +7,13 @@
     <!-- description: 用于处理投资项目数据 -->
     <!-- author: hanj1998@foxmail.com -->
     <!-- license: MIT -->
-    <!-- version: 1.3 -->
-    <!-- update log: 1.3-2026-07-22: 替换失效CDN(cdnjs.webstatic.cn→jsDelivr+unpkg备用) -->
-    <!-- SheetJS库 - 优先从jsDelivr加载，失败后备用到unpkg -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
+    <!-- version: 1.4 -->
+    <!-- update log: 1.4-2026-07-22: CDN切换到BootCDN(国内); 1.3-2026-07-22: 替换失效CDN(webstatic→jsDelivr+unpkg) -->
+    <!-- SheetJS库 - BootCDN优先，失败后备用到jsDelivr -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
             onerror="
               let s = document.createElement('script');
-              s.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+              s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
               s.onload = function () { console.log('XLSX loaded from fallback CDN'); };
               document.head.appendChild(s);
             "></script>

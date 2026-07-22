@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         网页表格导出
 // @namespace    https://github.com/hanj1998
-// @version      1.3
+// @version      1.4
 // @description  在网页表格右上角添加导出按钮，支持导出为XLSX文件，处理长数字精度问题，监测网页实时变化
 // @author       hanj-cn@qq.com
 // @match        *://*/*
 // @grant        GM_registerMenuCommand
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @require      https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js
+// @require      https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js
 // @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/网页表格导出.js
 // @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/网页表格导出.js
 // @license      MIT
