@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         批量下载
 // @namespace    https://github.com/hanj1998
-// @version      1.2
+// @version      1.2.1
 // @description  Automated document download solution for government service portals
 // @author       Professional Developer
 // @match        https://ycszx.sc.yichang.gov.cn/yczxplus/modules/suggestion-manager
 // @match        https://lzpt.ycsrd.gov.cn/npc/modules/suggestion-manager
 // @grant        GM_xmlhttpRequest
-// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/批量下载.js
-// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/批量下载.js
+// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v1.2.1/批量下载.js
+// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v1.2.1/批量下载.js
 // @license      MIT
 // ==/UserScript==
 

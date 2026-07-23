@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         名录库终结者
 // @namespace    https://github.com/hanj1998
-// @version      1.1.1
+// @version      1.1.2
 // @description  经济普查是真的累！！！
 // @author       hanj-cn@qq.com
-// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/MLK经普限定.js
-// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/MLK经普限定.js
+// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v1.1.2/MLK经普限定.js
+// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v1.1.2/MLK经普限定.js
 // @grant        unsafeWindow
 // @grant        GM_setValue
 // @grant        GM_getValue

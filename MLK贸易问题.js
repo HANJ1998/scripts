@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         名录库助手贸易专版
 // @namespace    https://github.com/hanj1998
-// @version      1.2
+// @version      1.2.1
 // @description  贸易问题专版 - 自动处理主要业务活动
 // @author       GOD
 // @match        *://tjymlk.stats.gov.cn/*
-// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/MLK贸易问题.js
-// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/MLK贸易问题.js
+// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v1.2.1/MLK贸易问题.js
+// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v1.2.1/MLK贸易问题.js
 // @license      MIT
 
 // ==/UserScript==

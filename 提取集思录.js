@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         提取集思录
 // @namespace    https://github.com/hanj1998
-// @version      1.4
+// @version      1.4.1
 // @description  获取网页上的表格内容，并在新页面展示
 // @author       hanj1998@foxmail.com
 // @match        https://www.jisilu.cn/*
@@ -9,8 +9,8 @@
 // @grant        GM_getValue
 // @grant        GM_xmlhttpRequest
 // @connect      www.jisilu.cn
-// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/提取集思录.js
-// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/提取集思录.js
+// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v1.4.1/提取集思录.js
+// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v1.4.1/提取集思录.js
 // @license      MIT
 // ==/UserScript==
 

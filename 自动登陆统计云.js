@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         统计云自动登陆
 // @namespace    https://github.com/hanj1998
-// @version      4.8
+// @version      4.8.1
 // @description  自动处理网站登录流程，包括账号管理等
 // @author       hanj1998@foxmail.com
 // @match        *://*/*
@@ -10,8 +10,8 @@
 // @grant        GM_xmlhttpRequest
 // @grant        GM_registerMenuCommand
 // @require      https://code.jquery.com/jquery-3.6.0.min.js
-// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/自动登陆统计云.js
-// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/自动登陆统计云.js
+// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v4.8.1/自动登陆统计云.js
+// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v4.8.1/自动登陆统计云.js
 // @license      MIT
 // ==/UserScript==
 

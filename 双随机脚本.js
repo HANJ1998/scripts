@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         双随机脚本
 // @namespace    https://github.com/hanj1998
-// @version      0.4.2
+// @version      0.4.3
 // @description  导入企业名单Excel，自动执行抽取、比对
 // @author       You
 // @match        http*://scjg.hubei.gov.cn/hbssj/meta/HBSSJ/analyses/CSTM-17956/*
 // @grant        none
 // @require      https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js
-// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/双随机脚本.js
-// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/双随机脚本.js
+// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v0.4.3/双随机脚本.js
+// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v0.4.3/双随机脚本.js
 // @license      MIT
 // ==/UserScript==
 

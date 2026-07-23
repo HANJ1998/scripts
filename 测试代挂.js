@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         测试代挂网页
 // @namespace    https://github.com/hanj1998
-// @version      0.1
+// @version      0.1.1
 // @description  try to take over the world!
 // @author       hanj.cn@outlook.com
 // @match        http://47.101.208.143:8848/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=208.143
 // @grant        none
-// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/测试代挂.js
-// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@main/测试代挂.js
+// @updateURL    https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v0.1.1/测试代挂.js
+// @downloadURL  https://jsd.onmicrosoft.cn/gh/HANJ1998/scripts@v0.1.1/测试代挂.js
 // @license      MIT
 // ==/UserScript==
 
